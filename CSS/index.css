@@ -47,16 +47,34 @@ body {
   display: block;
 }
 
-.ball1 {
-  width: 100px;
-  height: 100px;
-  background: rgb(72, 62, 62);
+.chosungContainer {
+  position: relative;
+  top: 10%;
+  left: 27%;
+  width: 400px;
+  height: 300px;
+  border-radius: 15px;
+  background: #fff;
 }
-.ball2 {
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 100px;
+.chosungScreen {
+  position: relative;
+  top: 50px;
+  left: 25%;
+  width: 200px;
   height: 100px;
-  background: #eadfdf;
+  line-height: 70px;
+  border: 3px solid #444548;
+  /* border-radius: 10px; */
+
+  /* z-index: 999; */
+}
+.chosungLoad {
+  position: absolute;
+  left: 70px;
+  bottom: 50px;
+  width: 250px;
+  height: 60px;
+  line-height: 70px;
+  background: #ccc;
+  border-radius: 10px;
 }
