@@ -33,58 +33,60 @@ body {
   background: #000;
   opacity: 0.8;
   display: none;
+  z-index: 99;
 }
 
 .gameSettings {
   position: fixed;
   left: 20px;
   top: 20px;
-  /* 가만히 있을때 */
   width: 50px;
   height: 50px;
   border-radius: 50%;
-
-  /* 클릭할때 */
-
-  /* width: 150px;
-  height: 50px;
-  border-radius: 20px; */
   background: linear-gradient(90deg, #004aad, #cb6ce6);
+  
 }
+
+.gameSettings i {
+  color: #fff;
+  font-size: 30px;
+}
+
+.timeSetting i,
+.gameInfo i {
+  display: none;
+}
+
 .gameSettings > i {
   position: absolute;
-  /* 가만히 있을때 */
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-
-  /* 눌렀을때 */
-  /* top: 20%;
-  left: 5%; */
-
-  font-size: 30px;
-  color: #fff;
-  vertical-align: middle;
 }
 
-.timeSetting i {
-  font-size: 30px;
-  display: none;
-  color: #fff;
-  /* 클릭했을때 */
-  /* position: absolute;
-  top: 20%;
-  left: 40%; */
+.gameSettings.expanded {
+  width: 150px;
+  height: 50px;
+  border-radius: 20px;
 }
 
-.gameInfo i {
+.gameSettings.expanded > i {
+  top: 25px;
+  left: 25px;
+}
+
+.gameSettings.expanded .timeSetting i {
   position: absolute;
-  font-size: 30px;
-  display: none;
-  color: #fff;
-  /* 클릭했을때 */
-  /* top: 18%;
-  left: 75%; */
+  display: block;
+  top: 20%;
+  left: 40%;
+}
+
+.gameSettings.expanded .gameInfo i {
+  position: absolute;
+  display: block;
+  top: 20%;
+  left: 75%;
 }
 
 .gameScreen {
@@ -93,7 +95,6 @@ body {
   height: 700px;
   top: 20px;
   left: 20%;
-  /* background: linear-gradient(90deg, #5de0e6, #004aad); */
   background: linear-gradient(to right top, #004aad, #cb6ce6);
   display: none;
   z-index: 99;

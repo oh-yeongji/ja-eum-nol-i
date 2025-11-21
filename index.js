@@ -20,20 +20,5 @@ dim.onclick = function () {
 };
 
 gameSettings.addEventListener("click", function () {
- 
-  gameSettings.style.width = "150px";
-  gameSettings.style.borderRadius = "20px";
-  // 눌렀을때 톱니
-  gameSettingsIcon.style.top = "25px";
-  gameSettingsIcon.style.left = "25px";
-
-  timeSetting.style.position = "absolute";
-  timeSetting.style.display = "block";
-  timeSetting.style.top = "20%";
-  timeSetting.style.left = "40%";
-
-  gameInfo.style.position = "absolute";
-  gameInfo.style.display = "block";
-  gameInfo.style.top = "20%";
-  gameInfo.style.left = "75%";
+  gameSettings.classList.toggle("expanded");
 });
