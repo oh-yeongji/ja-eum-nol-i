@@ -44,12 +44,13 @@ body {
   height: 50px;
   border-radius: 50%;
   background: linear-gradient(90deg, #004aad, #cb6ce6);
-  
+  transition: all 0.3s ease;
 }
 
 .gameSettings i {
   color: #fff;
   font-size: 30px;
+  transition: all 0.3s ease;
 }
 
 .timeSetting i,
