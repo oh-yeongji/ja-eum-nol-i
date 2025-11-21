@@ -12,17 +12,6 @@ body {
   background-size: cover;
 }
 
-.dim {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: #000;
-  opacity: 0.8;
-  display: none;
-}
-
 .startBtn {
   position: fixed;
   width: 400px;
@@ -35,34 +24,67 @@ body {
   line-height: 100px;
   z-index: 9;
 }
+.dim {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #000;
+  opacity: 0.8;
+  display: none;
+}
 
 .gameSettings {
   position: fixed;
   left: 20px;
   top: 20px;
+  /* 가만히 있을때 */
   width: 50px;
   height: 50px;
   border-radius: 50%;
+
+  /* 클릭할때 */
+
+  /* width: 150px;
+  height: 50px;
+  border-radius: 20px; */
   background: linear-gradient(90deg, #004aad, #cb6ce6);
-  line-height: 60px;
 }
-.gameSettings i {
+.gameSettings > i {
   position: absolute;
+  /* 가만히 있을때 */
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+
+  /* 눌렀을때 */
+  /* top: 20%;
+  left: 5%; */
+
   font-size: 30px;
-  color: #000;
+  color: #fff;
   vertical-align: middle;
 }
-.gameInfo {
-  /* position: fixed;
-  left: 0px;
-  top: 0; */
-}
-.gameInfo i {
-  font-size: 40px;
+
+.timeSetting i {
+  font-size: 30px;
   display: none;
+  color: #fff;
+  /* 클릭했을때 */
+  /* position: absolute;
+  top: 20%;
+  left: 40%; */
+}
+
+.gameInfo i {
+  position: absolute;
+  font-size: 30px;
+  display: none;
+  color: #fff;
+  /* 클릭했을때 */
+  /* top: 18%;
+  left: 75%; */
 }
 
 .gameScreen {
