@@ -12,6 +12,17 @@ body {
   background-size: cover;
 }
 
+.dim {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #000;
+  opacity: 0.8;
+  display: none;
+}
+
 .startBtn {
   position: fixed;
   width: 400px;
@@ -25,6 +36,35 @@ body {
   z-index: 9;
 }
 
+.gameSettings {
+  position: fixed;
+  left: 20px;
+  top: 20px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(90deg, #004aad, #cb6ce6);
+  line-height: 60px;
+}
+.gameSettings i {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 30px;
+  color: #000;
+  vertical-align: middle;
+}
+.gameInfo {
+  /* position: fixed;
+  left: 0px;
+  top: 0; */
+}
+.gameInfo i {
+  font-size: 40px;
+  display: none;
+}
+
 .gameScreen {
   position: relative;
   width: 900px;
@@ -33,18 +73,8 @@ body {
   left: 20%;
   /* background: linear-gradient(90deg, #5de0e6, #004aad); */
   background: linear-gradient(to right top, #004aad, #cb6ce6);
-  /* display: none; */
+  display: none;
   z-index: 99;
-}
-.dim {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: #000;
-  opacity: 0.8;
-  display: block;
 }
 
 .chosungContainer {
@@ -64,9 +94,6 @@ body {
   height: 100px;
   line-height: 70px;
   border: 3px solid #444548;
-  /* border-radius: 10px; */
-
-  /* z-index: 999; */
 }
 .chosungLoad {
   position: absolute;
