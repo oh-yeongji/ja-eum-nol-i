@@ -169,7 +169,7 @@ body {
   border-radius: 20px;
 }
 
-.gameInfo .gameInfoModal.active {
+.gameSettings .gameInfo .gameInfoModal.active {
   display: block;
 }
 
@@ -178,7 +178,14 @@ body {
   top: 30px;
   right: 40px;
 }
-
+.gameSettings .gameInfo .gameInfoModal > h2 {
+  position: absolute;
+  margin: 70px;
+  white-space: normal;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  line-height: 40px;
+}
 .gameScreen {
   position: relative;
   width: 900px;
