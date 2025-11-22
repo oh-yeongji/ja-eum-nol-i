@@ -87,10 +87,11 @@ body {
 }
 
 .timeSetting .timeModal {
-  position: absolute;
+  position: fixed;
   display: none;
-  top: 80px;
-  left: 0;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   width: 500px;
   height: 300px;
   background: linear-gradient(90deg, #004aad, #cb6ce6);
@@ -107,10 +108,10 @@ body {
   left: 200px;
 }
 
-.timeSetting .timeModal .closeBtn {
+.timeSetting .timeModal .timeCloseBtn {
   position: absolute;
   top: 30px;
-  right: 60px;
+  right: 40px;
 }
 
 .timeSetting .timeModal .timePanel {
@@ -154,6 +155,28 @@ body {
   pointer-events: auto;
   top: 20%;
   left: 75%;
+}
+
+.gameSettings.expanded .gameInfo .gameInfoModal {
+  position: fixed;
+  display: none;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 500px;
+  height: 300px;
+  background: linear-gradient(90deg, #004aad, #cb6ce6);
+  border-radius: 20px;
+}
+
+.gameInfo .gameInfoModal.active {
+  display: block;
+}
+
+.gameSettings.expanded .gameInfo .gameInfoModal .gameInfoCloseBtn {
+  position: absolute;
+  top: 30px;
+  right: 40px;
 }
 
 .gameScreen {

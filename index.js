@@ -7,11 +7,11 @@ const timeSetting = document.querySelector(".timeSetting > i");
 // 시간설정모달창
 const timeModal = document.querySelector(".timeModal");
 
-//모달창 클로즈 버튼
-const timeModalCloseBtn = document.querySelector(".closeBtn");
-
-// 게임 설명
+//infoIcon
 const gameInfo = document.querySelector(".gameInfo > i");
+//infoModal
+const gameInfoModal = document.querySelector(".gameInfoModal");
+
 const gameScreen = document.querySelector(".gameScreen");
 const chosungLoad = document.querySelector(".chosungLoad");
 
@@ -40,6 +40,17 @@ timeSetting.addEventListener("click", (e) => {
   timeModal.classList.add("active");
 });
 
-timeModalCloseBtn.addEventListener("click", function () {
+document.querySelector(".timeCloseBtn").addEventListener("click", function () {
   timeModal.classList.remove("active");
 });
+
+gameInfo.addEventListener("click", (e) => {
+  e.stopPropagation();
+  gameInfoModal.classList.add("active");
+});
+
+document
+  .querySelector(".gameInfoCloseBtn")
+  .addEventListener("click", function () {
+    gameInfoModal.classList.remove("active");
+  });
