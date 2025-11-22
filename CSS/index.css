@@ -157,7 +157,7 @@ body {
   left: 75%;
 }
 
-.gameSettings.expanded .gameInfo .gameInfoModal {
+.gameSettings .gameInfo .gameInfoModal {
   position: fixed;
   display: none;
   top: 50%;
@@ -173,7 +173,7 @@ body {
   display: block;
 }
 
-.gameSettings.expanded .gameInfo .gameInfoModal .gameInfoCloseBtn {
+.gameSettings .gameInfo .gameInfoModal .gameInfoCloseBtn {
   position: absolute;
   top: 30px;
   right: 40px;
