@@ -56,6 +56,8 @@ body {
 .timeSetting > i,
 .gameInfo > i {
   opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
 }
 
 .gameSettings > i {
@@ -79,15 +81,16 @@ body {
 .gameSettings.expanded .timeSetting > i {
   position: absolute;
   opacity: 1;
+  pointer-events: auto;
   top: 20%;
   left: 40%;
 }
 
 .timeSetting .timeModal {
-  position: relative;
-  opacity: 0;
-  margin-top: 100px;
-  margin-left: 500px;
+  position: absolute;
+  display: none;
+  top: 80px;
+  left: 0;
   width: 500px;
   height: 300px;
   background: linear-gradient(90deg, #004aad, #cb6ce6);
@@ -95,7 +98,7 @@ body {
 }
 
 .timeSetting .timeModal.active {
-  opacity: 1;
+  display: block;
 }
 
 .timeSetting .timeModal h2 {
@@ -148,6 +151,7 @@ body {
 .gameSettings.expanded .gameInfo > i {
   position: absolute;
   opacity: 1;
+  pointer-events: auto;
   top: 20%;
   left: 75%;
 }
