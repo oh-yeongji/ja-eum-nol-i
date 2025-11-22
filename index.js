@@ -4,6 +4,12 @@ const gameSettings = document.querySelector(".gameSettings");
 const gameSettingsIcon = document.querySelector(".gameSettings > i");
 // 시간설정
 const timeSetting = document.querySelector(".timeSetting  i");
+// 시간설정모달창
+const timeModal = document.querySelector(".timeModal");
+
+//모달창 클로즈 버튼
+const timeModalCloseBtn = document.querySelector(".closeBtn");
+
 // 게임 설명
 const gameInfo = document.querySelector(".gameInfo  i");
 const gameScreen = document.querySelector(".gameScreen");
@@ -21,4 +27,13 @@ dim.onclick = function () {
 
 gameSettings.addEventListener("click", function () {
   gameSettings.classList.toggle("expanded");
+});
+
+timeSetting.addEventListener("click", (e) => {
+  e.stopPropagation();
+  timeModal.classList.add("active");
+});
+
+timeModalCloseBtn.addEventListener("click", function () {
+  timeModal.classList.remove("active");
 });
