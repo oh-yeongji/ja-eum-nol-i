@@ -142,6 +142,13 @@ body {
   background: #fff;
 }
 
+.timeSetting .timeModal .timePanel .timeScreen > div {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
 .timeSetting .timeModal .timePanel .nextBtn {
   position: absolute;
   display: block;
