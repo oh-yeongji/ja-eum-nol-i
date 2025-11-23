@@ -1,56 +1,83 @@
-const startBtn = document.querySelector(".startBtn");
-const dim = document.querySelector(".dim");
-const gameSettings = document.querySelector(".gameSettings");
-const gameSettingsIcon = document.querySelector(".gameSettings > i");
-// 시간설정
-const timeSetting = document.querySelector(".timeSetting > i");
-// 시간설정모달창
-const timeModal = document.querySelector(".timeModal");
+document.addEventListener("DOMContentLoaded", () => {
+  const startBtn = document.querySelector(".startBtn");
+  const dim = document.querySelector(".dim");
+  const gameSettings = document.querySelector(".gameSettings");
+  const gameSettingsIcon = document.querySelector(".gameSettings > i");
+  // 시간설정
+  const timeSetting = document.querySelector(".timeSetting > i");
+  // 시간설정모달창
+  const timeModal = document.querySelector(".timeModal");
 
-//infoIcon
-const gameInfo = document.querySelector(".gameInfo > i");
-//infoModal
-const gameInfoModal = document.querySelector(".gameInfoModal");
+  // const timeScreen = document.querySelector(".timeScreen > ul");
+  //시간 슬라이드
+  const slide = document.querySelector(".timeSlide");
+  // const lis = document.querySelectorAll(".timeScreen li");
+  // const liWidth = lis[0].offsetWidth;
 
-const gameScreen = document.querySelector(".gameScreen");
-const chosungLoad = document.querySelector(".chosungLoad");
+  // 시간슬라이드 이전 버튼
+  const prev = document.querySelector(".prev");
 
-startBtn.onclick = function () {
-  gameScreen.style.display = "block";
-  dim.style.display = "block";
-};
+  // 시간슬라이드 다음 버튼
+  const next = document.querySelector(".next");
 
-dim.onclick = function () {
-  gameScreen.style.display = "none";
-  dim.style.display = "none";
-};
+  //infoIcon
+  const gameInfo = document.querySelector(".gameInfo > i");
+  //infoModal
+  const gameInfoModal = document.querySelector(".gameInfoModal");
 
-gameSettings.addEventListener("click", (e) => {
-  // 시간 설정 아이콘 눌렀을 때는 gear 토글 방지
-  if (e.target.closest(".timeSetting")) return;
+  const gameScreen = document.querySelector(".gameScreen");
+  const chosungLoad = document.querySelector(".chosungLoad");
 
-  // 게임 설명 아이콘 눌렀을 때도 gear 토글 방지
-  if (e.target.closest(".gameInfo")) return;
+  startBtn.onclick = function () {
+    gameScreen.style.display = "block";
+    dim.style.display = "block";
+  };
 
-  gameSettings.classList.toggle("expanded");
-});
+  dim.onclick = function () {
+    gameScreen.style.display = "none";
+    dim.style.display = "none";
+  };
 
-timeSetting.addEventListener("click", (e) => {
-  e.stopPropagation();
-  timeModal.classList.add("active");
-});
+  gameSettings.addEventListener("click", (e) => {
+    // 시간 설정 아이콘 눌렀을 때는 gear 토글 방지
+    if (e.target.closest(".timeSetting")) return;
 
-document.querySelector(".timeCloseBtn").addEventListener("click", function () {
-  timeModal.classList.remove("active");
-});
+    // 게임 설명 아이콘 눌렀을 때도 gear 토글 방지
+    if (e.target.closest(".gameInfo")) return;
 
-gameInfo.addEventListener("click", (e) => {
-  e.stopPropagation();
-  gameInfoModal.classList.add("active");
-});
-
-document
-  .querySelector(".gameInfoCloseBtn")
-  .addEventListener("click", function () {
-    gameInfoModal.classList.remove("active");
+    gameSettings.classList.toggle("expanded");
   });
+
+  timeSetting.addEventListener("click", (e) => {
+    e.stopPropagation();
+    timeModal.classList.add("active");
+  });
+
+  document
+    .querySelector(".timeCloseBtn")
+    .addEventListener("click", function () {
+      timeModal.classList.remove("active");
+    });
+
+  gameInfo.addEventListener("click", (e) => {
+    e.stopPropagation();
+    gameInfoModal.classList.add("active");
+  });
+
+  document
+    .querySelector(".gameInfoCloseBtn")
+    .addEventListener("click", function () {
+      gameInfoModal.classList.remove("active");
+    });
+
+  let currentIndex = 0;
+  const slideCount = slide.children.length;
+  const slideWidth = 200; // li width와 동일
+
+  next.addEventListener("click", () => {
+    if (currentIndex < slideCount - 1) {
+      currentIndex++;
+      slide.style.transform = `translateX(-${slideWidth * currentIndex}px)`;
+    }
+  });
+});

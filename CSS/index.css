@@ -4,7 +4,12 @@
   box-sizing: border-box;
   text-align: center;
 }
-
+ul {
+  list-style: none;
+}
+li {
+  text-decoration: none;
+}
 body {
   position: relative;
   background: url(/images/바탕화면.jpg) no-repeat;
@@ -108,52 +113,57 @@ body {
   left: 200px;
 }
 
-.timeSetting .timeModal .timeCloseBtn {
+.timeCloseBtn {
   position: absolute;
   top: 30px;
   right: 40px;
 }
 
-.timeSetting .timeModal .timePanel {
-  position: absolute;
-  top: 100px;
-  width: 500px;
-  height: 150px;
-}
-
-.timeSetting .timeModal .timePanel .timeScreen {
-  font-size: 45px;
-  display: flex;
-}
-
-.timeSetting .timeModal .timePanel .previousBtn {
-  position: absolute;
-  display: block;
-  top: 40%;
-  left: 20%;
-}
-
-.timeSetting .timeModal .timePanel .timeScreen {
-  position: absolute;
-  top: 20px;
-  left: 155px;
+.timePanel {
+  position: relative;
   width: 200px;
   height: 100px;
+  margin: 100px auto;
+}
+
+.timeScreen {
+  width: 200px;
+  height: 100px;
+  overflow: hidden;
+  margin: 0 auto;
+}
+
+.timeSlide {
+  display: flex;
+  flex-wrap: nowrap; /* 한 줄로 고정 */
+  transition: transform 0.5s ease;
+}
+
+.timeSlide li {
+  flex: 0 0 200px; /* li 폭 고정 */
+  width: 200px;
+  height: 100px;
+  line-height: 100px; /* 세로 중앙 */
+  font-size: 45px;
+  text-align: center;
   background: #fff;
 }
 
-.timeSetting .timeModal .timePanel .timeScreen > div {
+.arrows .prev,
+.arrows .next {
   position: absolute;
   top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translateY(-50%);
+  font-size: 30px;
+  cursor: pointer;
 }
 
-.timeSetting .timeModal .timePanel .nextBtn {
-  position: absolute;
-  display: block;
-  top: 40%;
-  right: 20%;
+.arrows .prev {
+  left: -50px;
+}
+
+.arrows .next {
+  right: -50px;
 }
 
 .gameSettings.expanded .gameInfo > i {
@@ -164,7 +174,7 @@ body {
   left: 75%;
 }
 
-.gameSettings .gameInfo .gameInfoModal {
+.gameInfo .gameInfoModal {
   position: fixed;
   display: none;
   top: 50%;
@@ -176,16 +186,16 @@ body {
   border-radius: 20px;
 }
 
-.gameSettings .gameInfo .gameInfoModal.active {
+.gameInfo .gameInfoModal.active {
   display: block;
 }
 
-.gameSettings .gameInfo .gameInfoModal .gameInfoCloseBtn {
+.gameInfo .gameInfoModal .gameInfoCloseBtn {
   position: absolute;
   top: 30px;
   right: 40px;
 }
-.gameSettings .gameInfo .gameInfoModal > h2 {
+.gameInfo .gameInfoModal > h2 {
   position: absolute;
   margin: 70px;
   white-space: normal;
