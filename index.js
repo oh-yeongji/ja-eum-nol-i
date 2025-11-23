@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const startBtn = document.querySelector(".startBtn");
+  const enterRoomBtn = document.querySelector(".enterRoomBtn");
   const dim = document.querySelector(".dim");
   const gameSettings = document.querySelector(".gameSettings");
   const gameSettingsIcon = document.querySelector(".gameSettings > i");
@@ -8,11 +8,8 @@ document.addEventListener("DOMContentLoaded", () => {
   // 시간설정모달창
   const timeModal = document.querySelector(".timeModal");
 
-  // const timeScreen = document.querySelector(".timeScreen > ul");
   //시간 슬라이드
   const slide = document.querySelector(".timeSlide");
-  // const lis = document.querySelectorAll(".timeScreen li");
-  // const liWidth = lis[0].offsetWidth;
 
   // 시간슬라이드 이전 버튼
   const prev = document.querySelector(".prev");
@@ -28,7 +25,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const gameScreen = document.querySelector(".gameScreen");
   const chosungLoad = document.querySelector(".chosungLoad");
 
-  startBtn.onclick = function () {
+  enterRoomBtn.onclick = function () {
     gameScreen.style.display = "block";
     dim.style.display = "block";
   };
@@ -38,7 +35,7 @@ document.addEventListener("DOMContentLoaded", () => {
     dim.style.display = "none";
   };
 
-  gameSettings.addEventListener("click", (e) => {
+  gameSettingsIcon.addEventListener("click", (e) => {
     // 시간 설정 아이콘 눌렀을 때는 gear 토글 방지
     if (e.target.closest(".timeSetting")) return;
 
