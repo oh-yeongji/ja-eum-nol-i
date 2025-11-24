@@ -1,5 +1,4 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const enterRoomBtn = document.querySelector(".enterRoomBtn");
   const dim = document.querySelector(".dim");
   const gameSettings = document.querySelector(".gameSettings");
   const gameSettingsIcon = document.querySelector(".gameSettings > i");
@@ -21,14 +20,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const gameInfo = document.querySelector(".gameInfo > i");
   //infoModal
   const gameInfoModal = document.querySelector(".gameInfoModal");
-
+  //입장하기 버튼
+  const enterRoomBtn = document.querySelector(".enterRoomBtn");
+  //게임 스크린
   const gameScreen = document.querySelector(".gameScreen");
-  const chosungLoad = document.querySelector(".chosungLoad");
 
-  enterRoomBtn.onclick = function () {
-    gameScreen.style.display = "block";
-    dim.style.display = "block";
-  };
+  //초성추출 버튼이지만 안할거임 시작하기로 할거임
+  const chosungLoad = document.querySelector(".chosungLoad");
 
   dim.onclick = function () {
     gameScreen.style.display = "none";
@@ -69,12 +67,28 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let currentIndex = 0;
   const slideCount = slide.children.length;
-  const slideWidth = 200; // li width와 동일
+  const slideWidth = 200;
 
+  //이전버튼
+
+  prev.addEventListener("click", () => {
+    if (currentIndex > 0) {
+      currentIndex--;
+      slide.style.transform = `translateX(-${slideWidth * currentIndex}px)`;
+    }
+  });
+
+  //다음버튼
   next.addEventListener("click", () => {
     if (currentIndex < slideCount - 1) {
       currentIndex++;
       slide.style.transform = `translateX(-${slideWidth * currentIndex}px)`;
     }
   });
+
+  //입장하기 버튼
+  enterRoomBtn.onclick = function () {
+    gameScreen.style.display = "block";
+    dim.style.display = "block";
+  };
 });
