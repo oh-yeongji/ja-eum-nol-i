@@ -23,21 +23,28 @@ document.addEventListener("DOMContentLoaded", () => {
   //입장하기 버튼
   const enterRoomBtn = document.querySelector(".enterRoomBtn");
   //게임 스크린
-  const gameScreen = document.querySelector(".gameScreen");
+  const gameRoom = document.querySelector(".gameRoom");
 
-  //초성추출 버튼이지만 안할거임 시작하기로 할거임
-  const chosungLoad = document.querySelector(".chosungLoad");
+  //input창
+  const input = document.querySelector(".input");
+
+  //입력 버튼
+  const enter = document.querySelector(".enter");
+  const p1Chat = document.querySelector(".p1Chat");
+
+  // 시작하기로 할거임
+  const startBtn = document.querySelector(".startBtn");
 
   dim.onclick = function () {
-    gameScreen.style.display = "none";
+    gameRoom.style.display = "none";
     dim.style.display = "none";
   };
 
   gameSettingsIcon.addEventListener("click", (e) => {
-    // 시간 설정 아이콘 눌렀을 때는 gear 토글 방지
+
     if (e.target.closest(".timeSetting")) return;
 
-    // 게임 설명 아이콘 눌렀을 때도 gear 토글 방지
+ 
     if (e.target.closest(".gameInfo")) return;
 
     gameSettings.classList.toggle("expanded");
@@ -88,7 +95,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
   //입장하기 버튼
   enterRoomBtn.onclick = function () {
-    gameScreen.style.display = "block";
+    gameRoom.style.display = "block";
     dim.style.display = "block";
   };
+
+  //input에 넣은거 입력버튼 누르면 채팅창에 뜨게끔
+  enter.addEventListener("click", function () {
+    p1Chat.style.marginTop = "40px";
+    p1Chat.style.marginLeft = "50px";
+
+    p1Chat.style.width = "150px";
+    p1Chat.style.height = "55px";
+    p1Chat.style.background = "#ccc";
+    p1Chat.style.opacity = "0.5";
+    p1Chat.style.borderRadius = "20px";
+    p1Chat.style.lineHeight = "55px";
+
+    const inputValue = input.value;
+    p1Chat.innerHTML = inputValue;
+    input.value = "";
+  });
 });
