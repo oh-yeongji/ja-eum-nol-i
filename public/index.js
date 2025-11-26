@@ -14,7 +14,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const input = document.querySelector(".input");
   const enter = document.querySelector(".enter");
   const p1Chat = document.querySelector(".p1Chat");
-  const startBtn = document.querySelector(".startBtn");
+  // const startBtn = document.querySelector(".startBtn");
 
   // --- 기존 UI 이벤트들 ---
   dim.onclick = () => {
@@ -74,20 +74,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function getChosung() {
     try {
-      const res = await fetch("/api/dict");
+      const res = await fetch("/api/dict"); // 서버리스 함수 호출
       if (!res.ok) throw new Error("API 호출 실패");
+
       const data = await res.json();
 
-      // 초성 한 칸씩 넣기
+      // 화면에 초성 표시
       document.querySelector(".firstCho").textContent = data.firstCho;
       document.querySelector(".secondCho").textContent = data.secondCho;
     } catch (err) {
       console.error(err);
+      document.querySelector(".firstCho").textContent = "?";
+      document.querySelector(".secondCho").textContent = "?";
     }
   }
 
-  // 시작 버튼 클릭 시
+  // 시작 버튼 클릭 시 호출
   document.querySelector(".startBtn").addEventListener("click", getChosung);
-
-  // 기존 코드 그대로 사용 가능
 });
