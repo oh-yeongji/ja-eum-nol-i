@@ -11,12 +11,16 @@ document.addEventListener("DOMContentLoaded", () => {
   const gameInfoModal = document.querySelector(".gameInfoModal");
   const enterRoomBtn = document.querySelector(".enterRoomBtn");
   const gameRoom = document.querySelector(".gameRoom");
-  const input = document.querySelector(".input");
-  const enter = document.querySelector(".enter");
-  const p1Chat = document.querySelector(".p1Chat");
-  // const startBtn = document.querySelector(".startBtn");
+  const wordInput = document.querySelector(".wordInput");
+  //입력
+  const submitBtn = document.querySelector(".submitBtn");
+  const firstCho = document.querySelector(".firstCho");
+  const secondCho = document.querySelector(".secondCho");
 
-  // --- 기존 UI 이벤트들 ---
+  const p1Chat = document.querySelector(".p1Chat");
+  const startBtn = document.querySelector(".startBtn");
+
+
   dim.onclick = () => {
     gameRoom.style.display = "none";
     dim.style.display = "none";
@@ -59,7 +63,23 @@ document.addEventListener("DOMContentLoaded", () => {
     gameRoom.style.display = "block";
     dim.style.display = "block";
   };
-  enter.addEventListener("click", () => {
+
+  //입력 버튼
+  submitBtn.addEventListener("click", async () => {
+    const word = wordInput.value.trim();
+    if (!word) return;
+
+    // 서버 요청 먼저
+    const res = await fetch(`/api/check-word?word=${encodeURIComponent(word)}`);
+    const data = await res.json();
+
+    if (!data.valid) {
+      // 존재하지 않는 단어 → UI 건들지 말 것
+      alert("존재하지않는단어입니다.");
+      return;
+    }
+
+    // 유효한 단어일 때만 UI 표시
     p1Chat.style.marginTop = "40px";
     p1Chat.style.marginLeft = "50px";
     p1Chat.style.width = "150px";
@@ -68,20 +88,17 @@ document.addEventListener("DOMContentLoaded", () => {
     p1Chat.style.opacity = "0.5";
     p1Chat.style.borderRadius = "20px";
     p1Chat.style.lineHeight = "55px";
-    p1Chat.innerHTML = input.value;
-    input.value = "";
+    p1Chat.style.display = "block";
+    p1Chat.innerHTML = word;
+
+    wordInput.value = "";
   });
 
   async function getChosung() {
-    try {
-      const res = await fetch("/api/dict");
-      if (!res.ok) throw new Error("API 호출 실패");
-      const data = await res.json();
-      document.querySelector(".firstCho").textContent = data.firstCho;
-      document.querySelector(".secondCho").textContent = data.secondCho;
-    } catch (err) {
-      console.error(err);
-    }
+    const res = await fetch("/api/dict");
+    const data = await res.json();
+    document.querySelector(".firstCho").textContent = data.firstCho;
+    document.querySelector(".secondCho").textContent = data.secondCho;
   }
 
   document.querySelector(".startBtn").addEventListener("click", getChosung);
