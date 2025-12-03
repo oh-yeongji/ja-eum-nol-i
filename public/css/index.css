@@ -245,18 +245,18 @@ body {
 .player1Section .p1Name {
   margin-top: 40px;
 }
-.player1Section .p1Photo {
+/* .player1Section .p1Photo {
   margin-top: 40px;
   margin-left: 100px;
   width: 200px;
   height: 150px;
-}
-
+} */
+/* 
 .player1Section .p1Photo img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-}
+} */
 
 /* 플레이어 1 끝 */
 
@@ -355,7 +355,7 @@ input[type="text"] {
   margin-top: 40px;
 }
 
-.player2Section .p2Photo {
+/* .player2Section .p2Photo {
   margin-top: 40px;
   margin-left: 100px;
   width: 200px;
@@ -366,4 +366,24 @@ input[type="text"] {
   width: 100%;
   height: 100%;
   object-fit: cover;
+} */
+
+/* .princess {
+  fill: #ffb6c1; 
+  stroke: #333;
+  stroke-width: 1;
+}
+.hair {
+  fill: #ffebcd; 
+}
+.dress {
+  fill: #4169e1; 
+}
+.crown {
+  fill: #ffd700; 
+  stroke: #daa520;
+} */
+
+.avatar {
+  margin-top: 40px;
 }
