@@ -1,19 +1,14 @@
 import express from "express";
-import { testData, fetchWordsByInitial, checkWord } from "../api/dict.js";
+import { chosung, checkWord } from "../api/dict.js";
 
 const router = express.Router();
 
-// 랜덤 초성 + 단어 API
+// 랜덤 초성
 router.get("/dict", async (req, res) => {
-  const randomIndex = Math.floor(Math.random() * testData.length);
-  const selected = testData[randomIndex];
-  const words = await fetchWordsByInitial(selected.firstCho, 30);
+  const firstCho = chosung[Math.floor(Math.random() * chosung.length)];
+  const secondCho = chosung[Math.floor(Math.random() * chosung.length)];
 
-  res.json({
-    firstCho: selected.firstCho,
-    secondCho: selected.secondCho,
-    words: words.length > 0 ? words : [selected.firstCho], // fallback
-  });
+  res.json({ firstCho: firstCho, secondCho: secondCho });
 });
 
 // 단어 검증 API
