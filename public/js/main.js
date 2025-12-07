@@ -1,5 +1,4 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const dim = document.querySelector(".dim");
   const gameSettings = document.querySelector(".gameSettings");
   const gameSettingsIcon = document.querySelector(".gameSettings > i");
   const timeSetting = document.querySelector(".timeSetting > i");
@@ -21,10 +20,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const p1Chat = document.querySelector(".p1Chat");
   const startBtn = document.querySelector(".startBtn");
 
-  dim.onclick = () => {
-    gameRoom.style.display = "none";
-    dim.style.display = "none";
-  };
   gameSettingsIcon.addEventListener("click", (e) => {
     if (e.target.closest(".timeSetting") || e.target.closest(".gameInfo"))
       return;
@@ -73,8 +68,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const data = await res.json();
 
     if (!data.valid) {
-      // 존재하지 않는 단어 → UI 건들지 말 것
-      alert("존재하지않는단어입니다.");
+      const alertModal = document.querySelector(".invalidWordModal");
+      alertModal.classList.add("active");
+
+      setTimeout(() => alertModal.classList.remove("active"), 1500);
+
       return;
     }
 
