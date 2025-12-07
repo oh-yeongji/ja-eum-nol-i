@@ -63,9 +63,8 @@ document.addEventListener("DOMContentLoaded", () => {
     gameRoom.style.display = "block";
     dim.style.display = "block";
   };
-
-  //입력 버튼
-  submitBtn.addEventListener("click", async () => {
+  //입력 함수
+  const handleSubmit = async () => {
     const word = wordInput.value.trim();
     if (!word) return;
 
@@ -87,6 +86,15 @@ document.addEventListener("DOMContentLoaded", () => {
     wordInput.value = "";
 
     p1ChatList.scrollTop = p1ChatList.scrollHeight;
+  };
+
+  //입력 버튼클릭
+  submitBtn.addEventListener("click", handleSubmit);
+  wordInput.addEventListener("keydown", async (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleSubmit();
+    }
   });
 
   async function getChosung() {
