@@ -17,9 +17,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const firstCho = document.querySelector(".firstCho");
   const secondCho = document.querySelector(".secondCho");
 
+  const p1ChatList = document.querySelector(".p1ChatList");
   const p1Chat = document.querySelector(".p1Chat");
   const startBtn = document.querySelector(".startBtn");
-
 
   dim.onclick = () => {
     gameRoom.style.display = "none";
@@ -79,19 +79,14 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // 유효한 단어일 때만 UI 표시
-    p1Chat.style.marginTop = "40px";
-    p1Chat.style.marginLeft = "50px";
-    p1Chat.style.width = "150px";
-    p1Chat.style.height = "55px";
-    p1Chat.style.background = "#ccc";
-    p1Chat.style.opacity = "0.5";
-    p1Chat.style.borderRadius = "20px";
-    p1Chat.style.lineHeight = "55px";
-    p1Chat.style.display = "block";
-    p1Chat.innerHTML = word;
+    const newChat = document.createElement("div");
+    newChat.classList.add("newChat");
+    newChat.textContent = word;
+    p1ChatList.appendChild(newChat);
 
     wordInput.value = "";
+
+    p1ChatList.scrollTop = p1ChatList.scrollHeight;
   });
 
   async function getChosung() {

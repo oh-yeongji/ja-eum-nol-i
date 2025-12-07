@@ -258,6 +258,18 @@ body {
   object-fit: cover;
 } */
 
+.p1ChatList .newChat {
+  margin-top: 40px;
+  margin-left: 50px;
+  width: 150px;
+  height: 55px;
+  background: #ccc;
+  opacity: 0.5;
+  border-radius: 20px;
+  line-height: 55px;
+  display: block;
+}
+
 /* 플레이어 1 끝 */
 
 .gameCenter {
