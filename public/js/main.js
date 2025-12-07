@@ -17,7 +17,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const secondCho = document.querySelector(".secondCho");
 
   const p1ChatList = document.querySelector(".p1ChatList");
-  const p1Chat = document.querySelector(".p1Chat");
   const startBtn = document.querySelector(".startBtn");
 
   gameSettingsIcon.addEventListener("click", (e) => {
@@ -60,8 +59,19 @@ document.addEventListener("DOMContentLoaded", () => {
   };
   //입력 함수
   const handleSubmit = async () => {
-    const word = wordInput.value.trim();
-    if (!word) return;
+    const word = wordInput.value.replace(/\s/g, "");
+    const char = Array.from(word);
+    console.log(char);
+
+    if (!char || char.length !== 2) {
+      const alertModal = document.querySelector(".invalidWordModal");
+      alertModal.innerText = "두 글자만 입력 가능합니다.";
+      alertModal.classList.add("active");
+
+      setTimeout(() => alertModal.classList.remove("active"), 1500);
+
+      return;
+    }
 
     // 서버 요청 먼저
     const res = await fetch(`/api/check-word?word=${encodeURIComponent(word)}`);
@@ -102,5 +112,5 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelector(".secondCho").textContent = data.secondCho;
   }
 
-  document.querySelector(".startBtn").addEventListener("click", getChosung);
+  startBtn.addEventListener("click", getChosung);
 });
