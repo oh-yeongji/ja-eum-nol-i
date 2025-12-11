@@ -13,9 +13,6 @@ router.get("/dict", (req, res) => {
 
 // 단어 검증 API
 router.get("/check-word", async (req, res) => {
-  console.log("QUERY:", req.query);
-  console.log("WORD:", req.query.word);
-
   const word = req.query.word;
 
   if (!word) return res.status(400).json({ valid: false });

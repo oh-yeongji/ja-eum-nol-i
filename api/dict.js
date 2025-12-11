@@ -27,7 +27,6 @@ export async function checkWord(word) {
 
   const res = await fetch(url);
   const raw = await res.text();
-  console.log("API RESPONSE RAW:", raw.slice(0, 200));
 
   if (!raw || raw.trim() === "") return false;
 

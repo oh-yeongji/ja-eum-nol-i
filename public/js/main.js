@@ -61,11 +61,33 @@ document.addEventListener("DOMContentLoaded", () => {
   const handleSubmit = async () => {
     const word = wordInput.value.replace(/\s/g, "");
     const char = Array.from(word);
-    console.log(char);
 
-    if (!char || char.length !== 2) {
+    if (char.length === 0) {
       const alertModal = document.querySelector(".invalidWordModal");
-      alertModal.innerText = "두 글자만 입력 가능합니다.";
+      alertModal.innerText = "단어를 입력하세요.";
+      alertModal.classList.add("active");
+
+      setTimeout(() => alertModal.classList.remove("active"), 1500);
+
+      return;
+    }
+
+    const hangulRegex = /^[가-힣]+$/;
+    const hangulTest = hangulRegex.test(word);
+
+    if (hangulTest !== true) {
+      const alertModal = document.querySelector(".invalidWordModal");
+      alertModal.innerText = "잘못된 단어입니다.";
+      alertModal.classList.add("active");
+
+      setTimeout(() => alertModal.classList.remove("active"), 1500);
+
+      return;
+    }
+
+    if (char.length !== 2) {
+      const alertModal = document.querySelector(".invalidWordModal");
+      alertModal.innerText = "두 단어만 입력 가능합니다.";
       alertModal.classList.add("active");
 
       setTimeout(() => alertModal.classList.remove("active"), 1500);
