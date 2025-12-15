@@ -60,9 +60,9 @@ document.addEventListener("DOMContentLoaded", () => {
   //입력 함수
   const handleSubmit = async () => {
     const word = wordInput.value.replace(/\s/g, "");
-    const char = Array.from(word);
+   
 
-    if (char.length === 0) {
+    if (word.length === 0) {
       const alertModal = document.querySelector(".invalidWordModal");
       alertModal.innerText = "단어를 입력하세요.";
       alertModal.classList.add("active");
@@ -85,7 +85,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    if (char.length !== 2) {
+    if (word.length !== 2) {
       const alertModal = document.querySelector(".invalidWordModal");
       alertModal.innerText = "두 단어만 입력 가능합니다.";
       alertModal.classList.add("active");
