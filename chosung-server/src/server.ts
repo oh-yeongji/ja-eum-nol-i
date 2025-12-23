@@ -1,34 +1,16 @@
 import express from "express";
-import http from "http";
-import { Server } from "socket.io";
+import { createServer } from "http";
+import { Server, Socket } from "socket.io";
 
 const app = express();
-const server = http.createServer(app);
+const httpServer = createServer(app);
 
-const io = new Server(server, {
+const io = new Server(httpServer, {
   cors: {
-    origin: "http://localhost:5173", // Vite 기준
+    origin: "http://localhost:5173",
   },
 });
 
-const PORT = 3000;
-
-app.get("/", (req, res) => {
-  res.send("server alive");
-});
-
-io.on("connection", (socket) => {
-  console.log("client connected:", socket.id);
-
-  socket.on("ping", () => {
-    socket.emit("pong");
-  });
-
-  socket.on("disconnect", () => {
-    console.log("client disconnected:", socket.id);
-  });
-});
-
-server.listen(PORT, () => {
-  console.log(`server running on ${PORT}`);
+httpServer.listen(5173, () => {
+  console.log("제대로 접속");
 });
