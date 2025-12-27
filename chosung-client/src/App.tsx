@@ -1,20 +1,25 @@
 import { useEffect } from "react";
 import { socket } from "./socket";
 
-function App() {
+const App = () => {
   useEffect(() => {
-    socket.connect();
-
-    socket.on("connect", () => {
+    const onConnect = () => {
       console.log("socket connected:", socket.id);
-    });
+    };
+
+    socket.on("connect", onConnect);
 
     return () => {
+      socket.off("connect", onConnect);
       socket.disconnect();
     };
   }, []);
 
-  return <div>소켓 연결 테스트 중</div>;
-}
+  return (
+    <div>
+      <button> 방입장하기</button>
+    </div>
+  );
+};
 
 export default App;
