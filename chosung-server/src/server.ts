@@ -23,6 +23,7 @@ interface Player {
   socketId: string;
   userId: string;
   nickname: string;
+  roomId: string;
 }
 
 interface Room {
@@ -67,6 +68,7 @@ io.on("connection", (socket: Socket) => {
       socketId: socket.id,
       userId,
       nickname,
+      roomId, //지금구조에서 역추적 불가해서 여기 저장
     });
     socket.join(roomId);
     console.log(
@@ -79,7 +81,34 @@ io.on("connection", (socket: Socket) => {
     }
   });
   socket.on("disconnect", () => {
-    console.log("disconnet:", socket.id);
+    let targetRoomId: string | null = null; //  어디 있는지모르니까 임시 null
+    let targetRoom: Room | null = null; // 어디 있는지모르니까 임시 null
+
+    for (const [roomId, room] of rooms.entries()) {
+      if (room.players.has(socket.id)) {
+        targetRoomId = roomId;
+        targetRoom = room;
+        break;
+      }
+    }
+    if (!targetRoom || !targetRoomId) return;
+
+    // player 제거
+    targetRoom.players.delete(socket.id);
+
+    // 방이 비었으면 삭제
+
+    if (targetRoom.players.size === 0) {
+      rooms.delete(targetRoomId);
+      return;
+    }
+
+    // READY상태에서 이탈 WAIT으로 롤백
+
+    if (targetRoom.status === "READY") {
+      targetRoom.status = "WAIT";
+      io.to(targetRoomId).emit("room-wait");
+    }
   });
 });
 
