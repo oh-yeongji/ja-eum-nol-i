@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { socket } from "./socket";
+import { socket } from "./socket/socket";
 
 type RoomStatus = "WAIT" | "READY";
 type Step = "ENTER" | "NICKNAME" | "WAIT";
