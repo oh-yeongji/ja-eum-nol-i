@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
 import { socket } from "./socket/socket";
+import GameRoom from "./rooms/GameRoom/GameRoom";
 
 type RoomStatus = "WAIT" | "READY";
 
 const App = () => {
   const [connected, setConnected] = useState(false);
   const [status, setStatus] = useState<RoomStatus>("WAIT");
+  const [entered, setEntered] = useState(false);
 
   useEffect(() => {
     socket.on("connect", () => {
@@ -37,7 +39,17 @@ const App = () => {
 
   return (
     <div className="background-image">
-      <button className="door-knock">방 두드리기</button>
+      <h1>초성놀이</h1>
+      {/* 
+      {!entered && (
+        <>
+          <button className="door-knock" onClick={() => setEntered(true)}>
+            방 두드리기
+          </button>
+        </>
+      )}
+      {entered && <GameRoom />} */}
+      <GameRoom />
     </div>
   );
 };

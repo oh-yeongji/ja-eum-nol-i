@@ -8,8 +8,10 @@ body,
 }
 
 .background-image {
-  min-height: 100%;
-  background: url("/images/배경사진(한국).jpg") center / cover no-repeat;
+  position: fixed;
+  inset: 0;
+  max-width: 1920px;
+  background: url("/images/closedDoor_pic(1).jpg") center / cover no-repeat;
 }
 
 .door-knock {
@@ -20,7 +22,12 @@ body,
   bottom: 80px;
   border-radius: 15px;
   transform: translateX(-50%);
-  background: greenyellow;
+  background: #1f3a5f;
+  color: #ffffff;
+
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+  border: none;
+
   line-height: 100px;
   z-index: 9;
   border: 1px;
