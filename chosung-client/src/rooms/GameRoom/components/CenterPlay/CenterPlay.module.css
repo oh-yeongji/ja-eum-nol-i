@@ -1,0 +1,55 @@
+.centerWrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.chosungContainer {
+  height: 200px;
+  margin-top: 40px;
+  padding: 20px;
+  background: brown;
+}
+
+.chosungScreen {
+  display: flex;
+  justify-content: space-between;
+  width: 200px;
+}
+
+.firstCho {
+  width: 70px;
+  height: 70px;
+  font-size: 40px;
+  background: #ddd;
+  text-align: center;
+}
+
+.secondCho {
+  width: 70px;
+  height: 70px;
+  font-size: 40px;
+  background: #ddd;
+  text-align: center;
+}
+
+.inputGroup {
+  display: flex;
+}
+
+.inputGroup input[type="text"] {
+  width: 150px;
+  height: 30px;
+  font-size: 20px;
+  border: 0;
+  background: #fff;
+}
+
+.submitBtn {
+  width: 50px;
+  height: 30px;
+  margin-top: 30px;
+  margin-left: 10px;
+  font-size: 20px;
+  line-height: 30px;
+  background: #fff;
+}
