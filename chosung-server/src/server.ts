@@ -2,8 +2,13 @@ import express from "express";
 import { createServer } from "http";
 import { Server, Socket } from "socket.io";
 import { randomUUID } from "crypto";
+import gameRouter from "./routes/game";
 
 const app = express();
+app.use(express.json());
+
+app.use("/api", gameRouter);
+
 const httpServer = createServer(app);
 
 const io = new Server(httpServer, {
