@@ -1,8 +1,13 @@
-import { useEffect } from "react";
-import { socket } from "../../socket/socket";
+import { useState, useEffect } from "react";
 import GameWrapper from "./components/GameWrapper";
 
 const GameRoom = () => {
+  const [playerWords, setPlayerWords] = useState<string[]>([]);
+
+  const addPlayerWord = (word: string) => {
+    setPlayerWords((prev) => [...prev, word]);
+  };
+
   return (
     <>
       <div
@@ -34,7 +39,7 @@ const GameRoom = () => {
           zIndex: "9",
         }}
       >
-        <GameWrapper />
+        <GameWrapper addPlayerWord={addPlayerWord} playerWords={playerWords} />
       </div>
     </>
   );
