@@ -38,12 +38,12 @@ const CenterPlay = ({ addPlayerWord }: CenterPlayProps) => {
       const res = await checkWord(word.trim());
 
       if (res.valid) {
-        addPlayerWord(trimmed); // 부모 컴포넌트로 올리는용
+        addPlayerWord(trimmed);
 
-        //입력 UX용 중복 방지
-        setusedWords((prev) => new Set(prev).add(trimmed)); // ux최적화용
+        //통과한것은 Set에 저장
+        setusedWords((prev) => new Set(prev).add(trimmed));
       } else {
-        showAlert("존재하지않는 단어입니다.");
+        showAlert(res.reason ?? "단어 사용불가");
       }
       setWord("");
     } catch (e) {

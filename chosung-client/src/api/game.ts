@@ -1,5 +1,6 @@
 export type CheckWordResponse = {
   valid: boolean;
+  reason?: string;
 };
 
 export const checkWord = async (word: string): Promise<CheckWordResponse> => {

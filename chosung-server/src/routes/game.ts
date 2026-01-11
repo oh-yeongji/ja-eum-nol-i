@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { checkWord as checkDictWord } from "../lib/dict";
+import { checkWordDetail } from "../lib/dict";
 
 const gameRouter = Router();
 
@@ -25,10 +25,13 @@ gameRouter.get("/check-word", async (req, res) => {
     return res.json({ valid: false });
   }
 
-  // 3. 국입국어원 사전 검사
-  const exist = await checkDictWord(trimmed);
-  if (!exist) {
-    return res.json({ valid: false });
+  // 3. 단어의 존재여부
+  const dictResult = await checkWordDetail(trimmed);
+  if (!dictResult.exist) {
+    return res.json({ valid: false, reason: "존재하지않는 단어입니다." });
+  }
+  if (!dictResult.isNoun) {
+    return res.json({ valid: false, reason: "명사가 아닙니다." });
   }
 
   // 통과 시
