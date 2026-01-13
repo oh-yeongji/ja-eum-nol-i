@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { socket } from "@/socket/socket";
 import { checkWord } from "@api/game";
 import styles from "./CenterPlay.module.css";
-import Timer from "./Timer";
 
 interface CenterPlayProps {
   addPlayerWord: (word: string) => void;
@@ -21,7 +21,37 @@ const CenterPlay = ({ addPlayerWord }: CenterPlayProps) => {
     setTimeout(() => setAlert(null), 1500);
   };
 
-  const handleSubmit = async () => {
+  useEffect(() => {
+    socket.connect();
+
+    socket.emit("join-room", { uesrId: "tset-user", nickname: "아무개" });
+
+    socket.on("countdown-start", ({ seconds }) => {
+      console.log("카운트다운 시작:", seconds);
+    });
+
+    socket.on("game-start", ({ chosungPair }) => {
+      setFirstCho(chosungPair[0]);
+      setSecondCho(chosungPair[1]);
+    });
+
+    socket.on("word-result", (res) => {
+      if (res.valid) {
+        addPlayerWord(res.word);
+        setusedWords((prev) => new Set([...prev, res.word]));
+      } else {
+        showAlert(res.reason);
+      }
+    });
+
+    return () => {
+      socket.off("countdown-start");
+      socket.off("game-start");
+      socket.off("word-result");
+    };
+  }, []);
+
+  const handleSubmit = () => {
     const trimmed = word.trim();
     // 1. 두글자 검사
     if (!/^[가-힣]{2}$/.test(trimmed)) {
@@ -34,21 +64,8 @@ const CenterPlay = ({ addPlayerWord }: CenterPlayProps) => {
       return;
     }
 
-    try {
-      const res = await checkWord(word.trim());
-
-      if (res.valid) {
-        addPlayerWord(trimmed);
-
-        //통과한것은 Set에 저장
-        setusedWords((prev) => new Set(prev).add(trimmed));
-      } else {
-        showAlert(res.reason ?? "단어 사용불가");
-      }
-      setWord("");
-    } catch (e) {
-      console.error("checkWord error:", e);
-    }
+    socket.emit("submit-word", { word: trimmed });
+    setWord("");
   };
 
   return (
@@ -76,8 +93,6 @@ const CenterPlay = ({ addPlayerWord }: CenterPlayProps) => {
           </div>
         </div>
       </div>
-
-      <Timer />
     </div>
   );
 };

@@ -1,30 +1,14 @@
 import { XMLParser } from "fast-xml-parser";
 import dotenv from "dotenv";
 dotenv.config();
-export const chosung = [
-  "ㄱ",
-  "ㄴ",
-  "ㄷ",
-  "ㄹ",
-  "ㅁ",
-  "ㅂ",
-  "ㅅ",
-  "ㅇ",
-  "ㅈ",
-  "ㅊ",
-  "ㅋ",
-  "ㅌ",
-  "ㅍ",
-  "ㅎ",
-];
 
-interface DictCheckResult  {
+interface DictCheckResult {
   exist: boolean;
   isNoun: boolean;
 }
 
 // 입력 단어 검증
-export async function checkWordDetail(word: string): Promise<DictCheckResult > {
+export async function checkWordDetail(word: string): Promise<DictCheckResult> {
   if (!word || typeof word !== "string") return { exist: false, isNoun: false };
 
   const API_KEY = process.env.KORDIC_API_KEY;
@@ -53,7 +37,7 @@ export async function checkWordDetail(word: string): Promise<DictCheckResult > {
 
     const firstItem = items[0];
 
-    // 명사가 아니라면 false
+    // 명사만 가능
     const isNoun = firstItem.pos === "명사";
     return {
       exist: true,

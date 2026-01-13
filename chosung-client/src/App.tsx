@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { socket } from "./socket/socket";
+import { socket } from "@/socket/socket";
 import GameRoom from "./rooms/GameRoom/GameRoom";
 
 type RoomStatus = "WAIT" | "READY";
