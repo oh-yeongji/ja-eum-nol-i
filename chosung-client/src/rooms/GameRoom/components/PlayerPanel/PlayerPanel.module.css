@@ -1,5 +1,6 @@
 .playerWrapper {
   width: 400px;
+  height: 100%;
   background: #ddd;
 }
 .nickName {

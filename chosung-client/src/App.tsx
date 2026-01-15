@@ -1,21 +1,42 @@
 import { useState, useEffect, useRef } from "react";
 import { socket } from "@/socket/socket";
 import GameRoom from "./rooms/GameRoom/GameRoom";
+import GuideModal from "./rooms/GameRoom/components/GuideModal";
 
 type RoomStatus = "WAIT" | "READY";
 
 const App = () => {
+  const [showGuide, setShowGuide] = useState(false);
   const [connected, setConnected] = useState(false);
   const [status, setStatus] = useState<RoomStatus>("WAIT");
   const [entered, setEntered] = useState(false);
   const connectedRef = useRef(false);
 
+  const handleEnterClick = () => {
+    const skip = localStorage.getItem("skipGuide") === "true";
+    if (skip) {
+      enterGameRoom(true);
+    } else {
+      setShowGuide(true);
+    }
+  };
+
+  const enterGameRoom = (skipChecked?: boolean) => {
+    if (skipChecked) localStorage.setItem("skipGuide", "true");
+
+    if (!entered) {
+      socket.emit("join-room", { nickname: "아무개" });
+      setEntered(true);
+      setShowGuide(false);
+    }
+  };
+
   const handleJoin = () => {
-    console.log("🔥 join-room emit 시도");
+    console.log("join-room emit 시도");
     console.log("socket.connected:", socket.connected);
 
     if (!socket.connected) {
-      console.log("❌ 아직 socket 연결 안됨");
+      console.log("아직 socket 연결 안됨");
       return;
     }
 
@@ -25,18 +46,17 @@ const App = () => {
   };
 
   useEffect(() => {
-    if (!connectedRef.current) {
-      socket.connect();
-      connectedRef.current = true;
-    }
+    if (connectedRef.current) return;
+
+    socket.connect();
+    connectedRef.current = true;
 
     socket.on("connect", () => {
-      console.log("socket connected:", socket.id);
       setConnected(true);
     });
+
     socket.on("disconnect", () => {
       setConnected(false);
-      setStatus("WAIT");
     });
 
     socket.on("room-wait", () => {
@@ -44,10 +64,8 @@ const App = () => {
     });
 
     return () => {
-      connectedRef.current = false;
       socket.off("connect");
       socket.off("disconnect");
-      socket.off("room-ready");
       socket.off("room-wait");
     };
   }, []);
@@ -56,19 +74,30 @@ const App = () => {
     <div className="background-image">
       <h1>초성놀이</h1>
 
-      {!entered && (
+      {!entered && !showGuide && (
         <>
+          <button className="enterRoom" onClick={handleEnterClick}>
+            방 입장하기
+          </button>
+
+          {/*강제로 모달 띄우기 */}
           <button
-            className="enterRoom"
             onClick={() => {
-              handleJoin();
-              setEntered(true);
+              localStorage.removeItem("skipGuide");
+              setShowGuide(true);
             }}
           >
-            방 입장하기
+            게임 설명 다시 보기 (Dev)
           </button>
         </>
       )}
+
+      {showGuide && (
+        <GuideModal
+          onConfirm={(skipChecked: boolean) => enterGameRoom(skipChecked)}
+        />
+      )}
+
       {entered && <GameRoom />}
     </div>
   );

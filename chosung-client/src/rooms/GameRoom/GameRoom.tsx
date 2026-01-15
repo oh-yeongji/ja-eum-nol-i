@@ -1,12 +1,42 @@
 import { useState, useEffect } from "react";
-import GameWrapper from "./components/GameWrapper";
+import { socket } from "@/socket/socket";
+import PlayerPanel from "./components/PlayerPanel/PlayerPanel";
+import CenterPlay from "./components/CenterPlay/CenterPlay";
+import { send } from "process";
 
 const GameRoom = () => {
-  const [playerWords, setPlayerWords] = useState<string[]>([]);
+  const [myWords, setMyWords] = useState<string[]>([]);
+  const [opponentWords, setOpponentWords] = useState<string[]>([]);
 
-  const addPlayerWord = (word: string) => {
-    setPlayerWords((prev) => [...prev, word]);
+  const handleWordResult = (word: string, senderId: string) => {
+    if (!word || senderId) return;
+
+    const isMe = senderId === socket.id;
+    if (isMe) {
+      setMyWords((prev) => [...prev, word]);
+    }
+
+    if (senderId === socket.id) {
+      setMyWords((prev) => [...prev, word]);
+      console.log("내 단어 추가:", word, "현재 내 단어:", [...myWords, word]);
+    } else {
+      setOpponentWords((prev) => [...prev, word]);
+      console.log("상대단어추가:", word, "현재상대 단어:", [
+        ...opponentWords,
+        word,
+      ]);
+    }
   };
+
+  useEffect(() => {
+    socket.on("word-result", (res) => {
+      handleWordResult(res.word, res.senderId);
+    });
+
+    return () => {
+      socket.off("word-result");
+    };
+  }, []);
 
   return (
     <>
@@ -31,15 +61,23 @@ const GameRoom = () => {
       <div
         className="stage"
         style={{
-          position: "fixed",
-          inset: 0,
+          width: "1200px",
+          height: "700px",
           display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
+          position: "fixed",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          justifyContent: "space-between",
+          background: "#fff",
+          borderRadius: "25px",
+          overflow: "hidden",
           zIndex: "9",
         }}
       >
-        <GameWrapper addPlayerWord={addPlayerWord} playerWords={playerWords} />
+        <PlayerPanel words={myWords} />
+        <CenterPlay />
+        <PlayerPanel words={opponentWords} />
       </div>
     </>
   );
