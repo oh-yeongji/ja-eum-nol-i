@@ -14,7 +14,7 @@ body,
   background: url("/images/closedDoor_pic(1).jpg") center / cover no-repeat;
 }
 
-.door-knock {
+.enterRoom {
   width: 400px;
   height: 100px;
   position: fixed;

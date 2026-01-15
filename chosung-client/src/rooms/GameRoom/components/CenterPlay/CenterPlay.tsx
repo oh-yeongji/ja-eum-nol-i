@@ -3,48 +3,57 @@ import { socket } from "@/socket/socket";
 import { checkWord } from "@api/game";
 import styles from "./CenterPlay.module.css";
 
-interface CenterPlayProps {
-  addPlayerWord: (word: string) => void;
+interface CenterPlayProps {}
+
+interface WordResult {
+  word: string;
+  valid: boolean;
+  reason?: string;
+  senderId: string;
 }
 
-const CenterPlay = ({ addPlayerWord }: CenterPlayProps) => {
+const CenterPlay = () => {
   const [word, setWord] = useState("");
   const [alert, setAlert] = useState<string | null>(null);
 
   const [firstCho, setFirstCho] = useState("?");
   const [secondCho, setSecondCho] = useState("?");
 
-  const [usedWords, setusedWords] = useState<Set<string>>(new Set());
+  const [lastResult, setLastResult] = useState<WordResult | null>(null);
 
   const showAlert = (msg: string) => {
     setAlert(msg);
     setTimeout(() => setAlert(null), 1500);
   };
 
-  useEffect(() => {
-    socket.connect();
 
-    socket.emit("join-room", { uesrId: "tset-user", nickname: "아무개" });
+  useEffect(() => {
+    socket.on("connect_error", (err) => {
+      console.error("socket error:", err.message);
+    });
 
     socket.on("countdown-start", ({ seconds }) => {
       console.log("카운트다운 시작:", seconds);
     });
 
     socket.on("game-start", ({ chosungPair }) => {
+      console.log("🎮 game-start received:", chosungPair);
+
       setFirstCho(chosungPair[0]);
       setSecondCho(chosungPair[1]);
     });
 
-    socket.on("word-result", (res) => {
-      if (res.valid) {
-        addPlayerWord(res.word);
-        setusedWords((prev) => new Set([...prev, res.word]));
-      } else {
-        showAlert(res.reason);
+    socket.on("word-result", ({ word, valid, reason, senderId }) => {
+      console.log("📨 word-result:", { word, valid, reason, senderId });
+      setLastResult({ word, valid, reason, senderId });
+
+      if (!valid && reason) {
+        showAlert(reason);
       }
     });
 
     return () => {
+      socket.off("connect_error");
       socket.off("countdown-start");
       socket.off("game-start");
       socket.off("word-result");
@@ -59,11 +68,7 @@ const CenterPlay = ({ addPlayerWord }: CenterPlayProps) => {
       return;
     }
     // 2. 중복검사
-    if (usedWords.has(trimmed)) {
-      showAlert("이미 사용한 단어입니다.");
-      return;
-    }
-
+    console.log("emit submit-word:", word);
     socket.emit("submit-word", { word: trimmed });
     setWord("");
   };
@@ -91,6 +96,14 @@ const CenterPlay = ({ addPlayerWord }: CenterPlayProps) => {
               Enter
             </div>
           </div>
+
+          {lastResult && (
+            <div className={styles.resultBox}>
+              <div>단어: {lastResult.word}</div>
+              <div>결과: {lastResult.valid ? "⭕ 성공" : "❌ 실패"}</div>
+              {lastResult.reason && <div>{lastResult.reason}</div>}
+            </div>
+          )}
         </div>
       </div>
     </div>
