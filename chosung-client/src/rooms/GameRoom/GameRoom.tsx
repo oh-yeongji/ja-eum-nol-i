@@ -2,29 +2,28 @@ import { useState, useEffect } from "react";
 import { socket } from "@/socket/socket";
 import PlayerPanel from "./components/PlayerPanel/PlayerPanel";
 import CenterPlay from "./components/CenterPlay/CenterPlay";
-import { send } from "process";
 
 const GameRoom = () => {
   const [myWords, setMyWords] = useState<string[]>([]);
   const [opponentWords, setOpponentWords] = useState<string[]>([]);
 
   const handleWordResult = (word: string, senderId: string) => {
-    if (!word || senderId) return;
+    console.log("비교:", senderId, socket.id, senderId === socket.id);
 
-    const isMe = senderId === socket.id;
-    if (isMe) {
-      setMyWords((prev) => [...prev, word]);
-    }
+    if (!word || !senderId) return;
 
     if (senderId === socket.id) {
-      setMyWords((prev) => [...prev, word]);
-      console.log("내 단어 추가:", word, "현재 내 단어:", [...myWords, word]);
+      setMyWords((prev) => {
+        const next = [...prev, word];
+        console.log("내 단어 next:", next);
+        return next;
+      });
     } else {
-      setOpponentWords((prev) => [...prev, word]);
-      console.log("상대단어추가:", word, "현재상대 단어:", [
-        ...opponentWords,
-        word,
-      ]);
+      setOpponentWords((prev) => {
+        const next = [...prev, word];
+        console.log("상대 단어 next:", next);
+        return next;
+      });
     }
   };
 
@@ -75,9 +74,9 @@ const GameRoom = () => {
           zIndex: "9",
         }}
       >
-        <PlayerPanel words={myWords} />
+        <PlayerPanel key="me " words={myWords} />
         <CenterPlay />
-        <PlayerPanel words={opponentWords} />
+        <PlayerPanel key="opponent" words={opponentWords} />
       </div>
     </>
   );
