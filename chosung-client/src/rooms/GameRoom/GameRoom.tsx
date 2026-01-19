@@ -4,6 +4,9 @@ import PlayerPanel from "./components/PlayerPanel/PlayerPanel";
 import CenterPlay from "./components/CenterPlay/CenterPlay";
 
 const GameRoom = () => {
+  const [chosungPair, setChosungPair] = useState<[string, string]>(["?", "?"]);
+  const [lastResult, setLastResult] = useState<any>(null);
+
   const [myWords, setMyWords] = useState<string[]>([]);
   const [opponentWords, setOpponentWords] = useState<string[]>([]);
 
@@ -28,12 +31,20 @@ const GameRoom = () => {
   };
 
   useEffect(() => {
-    socket.on("word-result", (res) => {
+    socket.on("game-start", ({ chosungPair }) => {
+      setChosungPair(chosungPair);
+    });
+
+    socket.on("word-validated", (res) => {
+      setLastResult(res);
+
+      if (!res.valid) return;
       handleWordResult(res.word, res.senderId);
     });
 
     return () => {
-      socket.off("word-result");
+      socket.off("game-start");
+      socket.off("word-validated");
     };
   }, []);
 
@@ -74,8 +85,12 @@ const GameRoom = () => {
           zIndex: "9",
         }}
       >
-        <PlayerPanel key="me " words={myWords} />
-        <CenterPlay />
+        <PlayerPanel key="me" words={myWords} />
+        <CenterPlay
+          chosungPair={chosungPair}
+          lastResult={lastResult}
+          onSubmitWord={(word) => socket.emit("submit-word", { word })}
+        />
         <PlayerPanel key="opponent" words={opponentWords} />
       </div>
     </>
