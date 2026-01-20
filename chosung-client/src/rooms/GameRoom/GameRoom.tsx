@@ -10,6 +10,9 @@ const GameRoom = () => {
   const [myWords, setMyWords] = useState<string[]>([]);
   const [opponentWords, setOpponentWords] = useState<string[]>([]);
 
+  const [timeLeftMs, setTimeLeftMs] = useState<number>(0);
+  const [endAt, setEndAt] = useState<number | null>(null);
+
   const handleWordResult = (word: string, senderId: string) => {
     console.log("비교:", senderId, socket.id, senderId === socket.id);
 
@@ -31,8 +34,21 @@ const GameRoom = () => {
   };
 
   useEffect(() => {
-    socket.on("game-start", ({ chosungPair }) => {
+    if (!endAt) return;
+    const id = setInterval(() => {
+      setTimeLeftMs(Math.max(0, endAt - Date.now()));
+    }, 100);
+
+    return () => clearInterval(id);
+  }, [endAt]);
+
+  useEffect(() => {
+    socket.emit("join-room", {
+      nickname: "test",
+    });
+    socket.on("game-start", ({ chosungPair, endAt }) => {
       setChosungPair(chosungPair);
+      setEndAt(endAt);
     });
 
     socket.on("word-validated", (res) => {
@@ -90,6 +106,7 @@ const GameRoom = () => {
           chosungPair={chosungPair}
           lastResult={lastResult}
           onSubmitWord={(word) => socket.emit("submit-word", { word })}
+          timeLeftMs={timeLeftMs}
         />
         <PlayerPanel key="opponent" words={opponentWords} />
       </div>

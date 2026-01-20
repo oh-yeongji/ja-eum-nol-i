@@ -1,21 +1,32 @@
 import express from "express";
 import { createServer } from "http";
+import cors from "cors";
 import { Server, Socket } from "socket.io";
 import { randomUUID } from "crypto";
 import gameRouter from "./routes/game.routes";
-import { getRandomChosungPair, CHOSUNG_LIST } from "./game/chosung";
-import { validateWordByChosung } from "./game/gameService";
+import { getRandomChosungPair } from "./game/chosung";
+import { validateWord } from "./game/gameService";
+import { Room, Player } from "./types";
 
 const app = express();
+
+//express cors
+app.use(
+  cors({
+    origin: ["http://localhost:5173", "https://chosung-client.vercel.app"],
+  }),
+);
 app.use(express.json());
 
 app.use("/api", gameRouter);
 
 const httpServer = createServer(app);
 
+//socket cors
 const io = new Server(httpServer, {
   cors: {
-    origin: "http://localhost:5173",
+    origin: ["http://localhost:5173", "https://chosung-client.vercel.app"],
+    methods: ["GET", "POST"],
   },
 });
 
@@ -24,24 +35,25 @@ const io = new Server(httpServer, {
          방 상태, 플레이어 설정
 
 =======================================================*/
-type RoomStatus = "WAIT" | "COUNTDOWN" | "PLAY";
-
-interface Player {
-  socketId: string;
-  userId: string;
-  nickname: string;
-  roomId: string;
-}
-
-interface Room {
-  status: RoomStatus;
-  players: Map<string, Player>;
-  chosungPair: [string, string];
-  usedWords: Set<string>;
-  countdownTimer?: NodeJS.Timeout;
-}
 
 const rooms = new Map<string, Room>();
+
+/*==========================================================================
+        
+         방 생성
+
+============================================================================*/
+const createRoom = (): { roomId: string; room: Room } => {
+  const roomId = randomUUID();
+  const room: Room = {
+    status: "WAIT",
+    players: new Map(),
+    chosungPair: getRandomChosungPair(),
+    usedWords: new Set(),
+  };
+  rooms.set(roomId, room);
+  return { roomId, room };
+};
 
 /*===================================================================
         
@@ -58,23 +70,6 @@ const getRoomBySocket = (socketId: string) => {
   return null;
 };
 
-/*==========================================================================
-        
-         방 생성
-
-============================================================================*/
-const createRoom = (): Room => {
-  const room: Room = {
-    status: "WAIT",
-    players: new Map(),
-    chosungPair: getRandomChosungPair(),
-    usedWords: new Set(),
-  };
-  const id = randomUUID();
-  rooms.set(id, room);
-  return room;
-};
-
 /* =============================================================================
    
 
@@ -85,14 +80,17 @@ const createRoom = (): Room => {
 
 ================================================================================ */
 io.on("connection", (socket: Socket) => {
-  console.log("접속:", socket.id);
-
+  console.log("🟢 socket connected:", socket.id);
   /* ---------- 방 참가 ---------- */
-  socket.on("join-room", ({ userId, nickname }) => {
+  socket.on("join-room", ({ nickname }: { nickname: string }) => {
+    console.log("join-room 이벤트 들어옴:", nickname);
+    const already = getRoomBySocket(socket.id);
+    if (already) return;
+
     // 1. 들어갈 방(WAIT상태의 방) 있는지 확인
-    //키 값 한 쌍 => entry
+    // 키 값 한 쌍 => entry
     let entry = [...rooms.entries()].find(
-      ([_, room]) => room.status === "WAIT" && room.players.size < 2
+      ([_, room]) => room.status === "WAIT" && room.players.size < 2,
     );
 
     let roomId: string;
@@ -100,8 +98,10 @@ io.on("connection", (socket: Socket) => {
 
     // 2. 들어갈방 없으면 새방 생성
     if (!entry) {
-      room = createRoom();
-      roomId = [...rooms.entries()].find(([k, v]) => v === room)![0];
+      const created = createRoom();
+
+      roomId = created.roomId;
+      room = created.room;
     } else {
       // 3. entry 구조분해
       [roomId, room] = entry;
@@ -110,7 +110,6 @@ io.on("connection", (socket: Socket) => {
     // 4. 플레이어 추가
     room.players.set(socket.id, {
       socketId: socket.id,
-      userId,
       nickname,
       roomId, //지금구조에서 역추적 불가해서 여기 저장
     });
@@ -130,8 +129,14 @@ io.on("connection", (socket: Socket) => {
 
         room.chosungPair = getRandomChosungPair();
 
+        /////// timer
+
+        const durationMs = 30000;
+        const endAt = Date.now() + durationMs;
+
         io.to(roomId).emit("game-start", {
           chosungPair: room.chosungPair,
+          endAt,
         });
       }, 5000);
     }
@@ -139,18 +144,50 @@ io.on("connection", (socket: Socket) => {
 
   /*---------초성 보내기---------------*/
 
-  socket.on("submit-word", ({ word }) => {
+  socket.on("submit-word", async ({ word }) => {
+    console.log("📩 submit-word", {
+      socketId: socket.id,
+      word,
+    });
     const resultData = getRoomBySocket(socket.id);
-    if (!resultData) return;
-
-    const { room } = resultData;
-    const result = validateWordByChosung(word, room);
-
-    if (result.valid) {
-      room.usedWords.add(word);
+    if (!resultData) {
+      console.log("❌ room 못 찾음");
+      return;
     }
-    socket.emit("word-result", { word, ...result });
+
+    //1. game status check
+    const { room, roomId } = resultData;
+    console.log("room.status:", room.status);
+    if (room.status !== "PLAY") {
+      return;
+    }
+    console.log("chosungPair (server):", room.chosungPair);
+    console.log("submitted word:", word);
+
+    //2.validate
+    const result = await validateWord({
+      chosungPair: room.chosungPair,
+      word,
+      usedWords: room.usedWords,
+    });
+
+    console.log("typeof result:", typeof result);
+    console.log("isPromise:", result instanceof Promise);
+
+    //3. status change
+    if (result.valid) {
+      const trimmed = word.trim();
+      room.usedWords.add(trimmed);
+    }
+    //4.result send
+    io.to(roomId).emit("word-validated", {
+      word,
+      valid: result.valid,
+      reason: result.reason,
+      senderId: socket.id,
+    });
   });
+
   /*=====================================================
         
        이탈, 연결끊김 시
@@ -178,7 +215,7 @@ io.on("connection", (socket: Socket) => {
     }
   });
 });
-
-httpServer.listen(3000, () => {
-  console.log("제대로 접속");
+const PORT = process.env.PORT || 3000;
+httpServer.listen(PORT, () => {
+  console.log(`Server running on ${PORT}`);
 });

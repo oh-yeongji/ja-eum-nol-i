@@ -25,7 +25,6 @@ const App = () => {
     if (skipChecked) localStorage.setItem("skipGuide", "true");
 
     if (!entered) {
-      socket.emit("join-room", { nickname: "아무개" });
       setEntered(true);
       setShowGuide(false);
     }
