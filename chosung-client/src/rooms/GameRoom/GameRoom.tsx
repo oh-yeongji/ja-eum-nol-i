@@ -37,7 +37,7 @@ const GameRoom = () => {
     if (!endAt) return;
     const id = setInterval(() => {
       setTimeLeftMs(Math.max(0, endAt - Date.now()));
-    }, 100);
+    }, 1000);
 
     return () => clearInterval(id);
   }, [endAt]);

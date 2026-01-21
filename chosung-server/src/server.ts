@@ -131,7 +131,7 @@ io.on("connection", (socket: Socket) => {
 
         /////// timer
 
-        const durationMs = 30000;
+        const durationMs = 60000;
         const endAt = Date.now() + durationMs;
 
         io.to(roomId).emit("game-start", {
