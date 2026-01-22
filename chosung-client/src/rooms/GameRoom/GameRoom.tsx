@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { socket } from "@/socket/socket";
 import PlayerPanel from "./components/PlayerPanel/PlayerPanel";
 import CenterPlay from "./components/CenterPlay/CenterPlay";
-
+import ResultModal from "./components/ResultModal";
 const GameRoom = () => {
   const [chosungPair, setChosungPair] = useState<[string, string]>(["?", "?"]);
   const [lastResult, setLastResult] = useState<any>(null);
@@ -83,7 +83,7 @@ const GameRoom = () => {
           zIndex: "2",
         }}
       />
-
+      <ResultModal />
       <div
         className="stage"
         style={{
