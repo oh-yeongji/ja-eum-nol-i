@@ -2,8 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { socket } from "@/socket/socket";
 import GameRoom from "./rooms/GameRoom/GameRoom";
 import GuideModal from "./rooms/GameRoom/components/GuideModal";
-
-type RoomStatus = "WAIT" | "READY";
+import type { RoomStatus } from "types/domain/room";
 
 const App = () => {
   const [showGuide, setShowGuide] = useState(false);

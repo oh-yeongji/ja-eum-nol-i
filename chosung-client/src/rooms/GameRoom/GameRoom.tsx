@@ -3,7 +3,9 @@ import { socket } from "@/socket/socket";
 import PlayerPanel from "./components/PlayerPanel/PlayerPanel";
 import CenterPlay from "./components/CenterPlay/CenterPlay";
 import ResultModal from "./components/ResultModal";
+import type { RoomStatus } from "@/types/domain/room";
 const GameRoom = () => {
+  const [state, setState] = useState<RoomStatus>("WAIT");
   const [chosungPair, setChosungPair] = useState<[string, string]>(["?", "?"]);
   const [lastResult, setLastResult] = useState<any>(null);
 
@@ -12,7 +14,6 @@ const GameRoom = () => {
 
   const [timeLeftMs, setTimeLeftMs] = useState<number>(0);
   const [endAt, setEndAt] = useState<number | null>(null);
-
   const handleWordResult = (word: string, senderId: string) => {
     console.log("비교:", senderId, socket.id, senderId === socket.id);
 
@@ -33,34 +34,60 @@ const GameRoom = () => {
     }
   };
 
-  useEffect(() => {
-    if (!endAt) return;
-    const id = setInterval(() => {
-      setTimeLeftMs(Math.max(0, endAt - Date.now()));
-    }, 1000);
-
-    return () => clearInterval(id);
-  }, [endAt]);
+  ///게임 들어간다
 
   useEffect(() => {
     socket.emit("join-room", {
       nickname: "test",
     });
-    socket.on("game-start", ({ chosungPair, endAt }) => {
+    const onGameStart = ({ chosungPair, endAt }: any) => {
+      setState("PLAY");
       setChosungPair(chosungPair);
       setEndAt(endAt);
-    });
+    };
 
-    socket.on("word-validated", (res) => {
+    const onWordValidated = (res: any) => {
       setLastResult(res);
-
       if (!res.valid) return;
       handleWordResult(res.word, res.senderId);
-    });
+    };
+
+    socket.on("game-start", onGameStart);
+    socket.on("word-validated", onWordValidated);
 
     return () => {
-      socket.off("game-start");
-      socket.off("word-validated");
+      socket.off("game-start", onGameStart);
+      socket.off("word-validated", onWordValidated);
+    };
+  }, []);
+
+  // 타이머 시작
+  useEffect(() => {
+    if (!endAt || state !== "PLAY") return;
+
+    const id = setInterval(() => {
+      setTimeLeftMs(Math.max(0, endAt - Date.now()));
+    }, 1000);
+
+    return () => clearInterval(id);
+  }, [endAt, state]);
+
+  //타이머 종료+ 보조안전
+  useEffect(() => {
+    if (state === "PLAY" && endAt && Date.now() >= endAt) {
+      setState("END");
+    }
+  }, [timeLeftMs, state, endAt]);
+
+  useEffect(() => {
+    const onGameEnd = () => {
+      setState("END");
+      setEndAt(null);
+    };
+
+    socket.on("game-end", onGameEnd);
+    return () => {
+      socket.off("game-end", onGameEnd);
     };
   }, []);
 
@@ -83,7 +110,9 @@ const GameRoom = () => {
           zIndex: "2",
         }}
       />
-      <ResultModal />
+
+      {state === "END" && <ResultModal />}
+
       <div
         className="stage"
         style={{

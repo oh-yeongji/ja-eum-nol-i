@@ -6,7 +6,7 @@ import { randomUUID } from "crypto";
 import gameRouter from "./routes/game.routes";
 import { getRandomChosungPair } from "./game/chosung";
 import { validateWord } from "./game/gameService";
-import { Room, Player } from "./types";
+import type { Room, Player } from "./types";
 
 const app = express();
 
@@ -50,6 +50,9 @@ const createRoom = (): { roomId: string; room: Room } => {
     players: new Map(),
     chosungPair: getRandomChosungPair(),
     usedWords: new Set(),
+    countdownTimer: undefined,
+    gameTimer: undefined,
+    endAt: undefined,
   };
   rooms.set(roomId, room);
   return { roomId, room };
@@ -138,6 +141,18 @@ io.on("connection", (socket: Socket) => {
           chosungPair: room.chosungPair,
           endAt,
         });
+
+        room.gameTimer = setTimeout(() => {
+          if (room.status !== "PLAY") return;
+
+          room.status = "END";
+          room.gameTimer = undefined;
+
+          /*--------게임종료-----------*/
+          io.to(roomId).emit("game-end", {
+            words: Array.from(room.usedWords),
+          });
+        }, durationMs);
       }, 5000);
     }
   });
@@ -151,11 +166,10 @@ io.on("connection", (socket: Socket) => {
     });
     const resultData = getRoomBySocket(socket.id);
     if (!resultData) {
-      console.log("❌ room 못 찾음");
+      console.log(" room 못 찾음");
       return;
     }
 
-    //1. game status check
     const { room, roomId } = resultData;
     console.log("room.status:", room.status);
     if (room.status !== "PLAY") {
@@ -174,12 +188,11 @@ io.on("connection", (socket: Socket) => {
     console.log("typeof result:", typeof result);
     console.log("isPromise:", result instanceof Promise);
 
-    //3. status change
     if (result.valid) {
       const trimmed = word.trim();
       room.usedWords.add(trimmed);
     }
-    //4.result send
+
     io.to(roomId).emit("word-validated", {
       word,
       valid: result.valid,
