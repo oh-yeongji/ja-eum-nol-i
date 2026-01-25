@@ -33,7 +33,7 @@ export function getRandomChosungPair(): [string, string] {
   return [first, second];
 }
 
-export function extractFirstTwoChosungs(word: string): [string, string] | null {
+export function extractTwoChosungs(word: string): [string, string] | null {
   if (word.length < 2) return null;
 
   const result: string[] = [];
