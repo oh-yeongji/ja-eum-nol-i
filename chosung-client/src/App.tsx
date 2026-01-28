@@ -9,8 +9,7 @@ const App = () => {
   const [connected, setConnected] = useState(false);
   const [status, setStatus] = useState<RoomStatus>("WAIT");
   const [entered, setEntered] = useState(false);
-  const connectedRef = useRef(false);
-
+  const hasJoinedRef = useRef(false);
   const handleEnterClick = () => {
     const skip = localStorage.getItem("skipGuide") === "true";
     if (skip) {
@@ -29,27 +28,14 @@ const App = () => {
     }
   };
 
-  const handleJoin = () => {
-    console.log("join-room emit 시도");
-    console.log("socket.connected:", socket.connected);
 
-    if (!socket.connected) {
-      console.log("아직 socket 연결 안됨");
-      return;
-    }
-
-    socket.emit("join-room", {
-      nickname: "아무개",
-    });
-  };
 
   useEffect(() => {
-    if (connectedRef.current) return;
-
     socket.connect();
-    connectedRef.current = true;
 
     socket.on("connect", () => {
+      console.log("연결:",socket.id);
+      
       setConnected(true);
     });
 
@@ -67,6 +53,17 @@ const App = () => {
       socket.off("room-wait");
     };
   }, []);
+
+
+useEffect(()=>{
+  if(!connected || !entered) return;
+  if (hasJoinedRef.current) return;
+  console.log("join-room emit");
+  
+  socket.emit("join-room",{nickname:"test"});
+  hasJoinedRef.current = true;
+},[connected,entered])
+
 
   return (
     <div className="background-image">
