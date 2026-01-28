@@ -34,13 +34,11 @@ export function getRandomChosungPair(): [string, string] {
 }
 
 export function extractTwoChosungs(word: string): [string, string] | null {
-  if (word.length < 2) return null;
-
   const result: string[] = [];
 
   for (const char of word) {
     const code = char.charCodeAt(0);
-    if (code < HANGLE_START || code > HANGLE_END) return null;
+    if (code < HANGLE_START || code > HANGLE_END) continue;
 
     const index = Math.floor((code - HANGLE_START) / 588);
     result.push(CHOSUNG_LIST[index]);

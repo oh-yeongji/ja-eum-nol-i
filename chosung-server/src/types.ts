@@ -3,8 +3,8 @@ export interface Room {
   players: Map<string, Player>;
   chosungPair: [string, string];
   usedWords: Set<string>;
-  countdownTimer?: NodeJS.Timeout;
-  gameTimer?: NodeJS.Timeout;
+  countdownTimer?: NodeJS.Timeout| undefined;
+  gameTimer?: NodeJS.Timeout| undefined;
   endAt?: number;
 }
 
