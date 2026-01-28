@@ -23,7 +23,6 @@ const CenterPlay = ({
 }: Props) => {
   const [word, setWord] = useState("");
   const [alert, setAlert] = useState<string | null>(null);
-  const [disabled, setDisabled] = useState(false);
 
   const isTimeOver = timeLeftMs <= 0;
 
@@ -33,6 +32,7 @@ const CenterPlay = ({
   };
 
   const handleSubmit = () => {
+    if (isTimeOver) return;
     const trimmed = word.trim();
     if (!trimmed) {
       showAlert("단어를 입력하세요");
@@ -41,8 +41,6 @@ const CenterPlay = ({
     }
     onSubmitWord(trimmed);
     setWord("");
-
-    if (isTimeOver) return;
   };
 
   useEffect(() => {
@@ -69,20 +67,23 @@ const CenterPlay = ({
               value={word}
               disabled={isTimeOver}
               onChange={(e) => setWord(e.target.value)}
-              onKeyDown={(e) => {
-                e.key === "Enter" && handleSubmit();
-                if (isTimeOver) return;
+              onKeyDown={(e:React.KeyboardEvent<HTMLInputElement>) => {
+                if(e.nativeEvent.isComposing) return;
+                if(e.key === "Enter"){
+                  handleSubmit();
+                }
               }}
             />
-            <div
-              className={styles.submitBtn}
+            <button
+            type="button"
+            className={styles.submitBtn}
               onClick={() => {
                 if (isTimeOver) return;
                 handleSubmit();
               }}
             >
               Enter
-            </div>
+            </button>
           </div>
           <Timer timeLeftMs={timeLeftMs} />
         </div>
