@@ -87,6 +87,8 @@ const getRoomBySocket = (socketId: string) => {
 
 
 ================================================================================ */
+
+let tempNumber = 0;
 io.on("connection", (socket: Socket) => {
   
   /* ---------- 방 참가 ---------- */
@@ -117,11 +119,10 @@ io.on("connection", (socket: Socket) => {
 
     
     // 4. 플레이어 추가
+  tempNumber++;
+  const tempNickname = `player${tempNumber}`;
 
-let tempNumber = room.players.size + 1;
- const tempNickname = `player${tempNumber}`;
-
-room.players.set(socket.id, {
+  room.players.set(socket.id, {
       socketId: socket.id,
       nickname: tempNickname,
       roomId, //지금구조에서 역추적 불가해서 여기 저장
@@ -129,20 +130,13 @@ room.players.set(socket.id, {
 
     socket.join(roomId);
 
-
-    
-
-//4.5 각 방에 닉네임 ,roomId을 준다.
-
 const playerSnapshot:PlayerSnapshot[] = Array.from(room.players.values()).map(player=>({
   socketId : player.socketId,
   nickname : player.nickname,
 }))
 
-io.to(roomId).emit("room-updated",{
-  players:playerSnapshot,
-  you:socket.id,
-})
+io.to(roomId).emit("room-updated",{players: playerSnapshot});
+socket.emit("set-my-id",{you:socket.id});
 
     // 5. 인원 다 차면 COUNTDOWN
     if (room.players.size === 2) {
@@ -213,9 +207,6 @@ io.to(roomId).emit("room-updated",{
       word,
       usedWords: room.usedWords,
     });
-
-    console.log("typeof result:", typeof result);
-    console.log("isPromise:", result instanceof Promise);
 
     if (result.valid) {
       const trimmed = word.trim();

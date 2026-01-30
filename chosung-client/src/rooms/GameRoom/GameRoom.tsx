@@ -6,11 +6,15 @@
   import type { RoomStatus,PlayerSnapshot } from "@/types/domain/room";
 
   const GameRoom = () => {
-  const [players,setPlayers]= useState<PlayerSnapshot[]>([]);
-  const [mySocketId,setMySocketId]=useState<string>("");
-  const [state, setState] = useState<RoomStatus>("WAIT");
-  const [roomId,setRoomId] =useState<string>("");
+  const [roomData,setRoomData]=useState<{
+    players:PlayerSnapshot[];
+    myId:string;
+  }>({
+    players:[],
+    myId:""
+  })
 
+  const [state, setState] = useState<RoomStatus>("WAIT");
 
   const [chosungPair, setChosungPair] = useState<[string, string]>(["?", "?"]);
   const [lastResult, setLastResult] = useState<any>(null);
@@ -23,32 +27,34 @@
 
     // 게임 방 입장 할때
   useEffect(() => {
-  const onRoomUpdated=({ players,you }: { players: PlayerSnapshot[]; you:string; }) => {
-    console.log("📢 방 업데이트됨:", players);
-    setMySocketId(you);
-      setPlayers(players);
+  const onRoomUpdated=({ players }: { players: PlayerSnapshot[]}) => {
+
+    setRoomData((prev) => ({ ...prev, players }));
     };
 
+const onSetMyId=({you}:{you:string})=>{
+setRoomData((prev)=>({...prev , myId:you}));
+};
 
 
-    if (!socket.connected) socket.connect();
-    socket.emit("join-room", {});
-
-  socket.on("room-updated",onRoomUpdated);
+socket.on("room-updated",onRoomUpdated);
+socket.on("set-my-id",onSetMyId);
 
     return () => {
       socket.off("room-updated",onRoomUpdated);
+      socket.off("set-my-id",onSetMyId);
     };
   }, []);
 
-  const me = players.find(p => p.socketId === mySocketId);
-  const opponent = players.find(p => p.socketId !== mySocketId && mySocketId!=="");
+  const me = roomData.players.find(p => p.socketId === roomData.myId);
+  const opponent = roomData.players.find(p => p.socketId !== roomData.myId && roomData.myId!=="");
+
 
   const handleWordResult = (word: string, senderId: string) => {
 
-      if (!word || !senderId) return;
+      if (!word || !senderId||!roomData.myId) return;
 
-      if (senderId === mySocketId) {
+      if (senderId === roomData.myId) {
         setMyWords((prev) =>  [...prev, word] );
 
       } else {
@@ -83,7 +89,7 @@
         socket.off("game-start", onGameStart);
         socket.off("word-validated", onWordValidated);
       };
-    }, []);
+    }, [roomData.myId]);
 
     // 타이머 시작
     useEffect(() => {
@@ -161,7 +167,7 @@
             onSubmitWord={(word) => socket.emit("submit-word", { word })}
             timeLeftMs={timeLeftMs}
           />
-          <PlayerPanel key="right-opponent" nickname={opponent?.nickname ?? (players.length < 2 ?"상대 대기중...":"로딩 중")} words={opponentWords} />
+          <PlayerPanel key="right-opponent" nickname={opponent && opponent.socketId !== roomData.myId ? opponent.nickname :(roomData.players.length < 2 ?"상대 대기중...":"로딩 중")} words={opponentWords} />
         </div>
       </>
     );
