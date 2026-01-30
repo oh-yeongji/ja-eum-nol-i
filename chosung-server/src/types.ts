@@ -14,8 +14,8 @@ export interface Player {
   roomId: string;
 }
 
-//gameService
-export interface Room {
-  chosungPair: [string, string];
-  usedWords: Set<string>;
-}
+
+export type PlayerSnapshot = {
+  nickname:string;
+};
+

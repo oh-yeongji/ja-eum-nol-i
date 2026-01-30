@@ -1,11 +1,17 @@
-import { useState, useEffect } from "react";
-import { socket } from "@/socket/socket";
-import PlayerPanel from "./components/PlayerPanel/PlayerPanel";
-import CenterPlay from "./components/CenterPlay/CenterPlay";
-import ResultModal from "./components/ResultModal";
-import type { RoomStatus } from "@/types/domain/room";
-const GameRoom = () => {
+  import { useState, useEffect } from "react";
+  import { socket } from "@/socket/socket";
+  import PlayerPanel from "./components/PlayerPanel/PlayerPanel";
+  import CenterPlay from "./components/CenterPlay/CenterPlay";
+  import ResultModal from "./components/ResultModal";
+  import type { RoomStatus,PlayerSnapshot } from "@/types/domain/room";
+
+  const GameRoom = () => {
+  const [players,setPlayers]= useState<PlayerSnapshot[]>([]);
+  const [mySocketId,setMySocketId]=useState<string>("");
   const [state, setState] = useState<RoomStatus>("WAIT");
+  const [roomId,setRoomId] =useState<string>("");
+
+
   const [chosungPair, setChosungPair] = useState<[string, string]>(["?", "?"]);
   const [lastResult, setLastResult] = useState<any>(null);
 
@@ -14,133 +20,151 @@ const GameRoom = () => {
 
   const [timeLeftMs, setTimeLeftMs] = useState<number>(0);
   const [endAt, setEndAt] = useState<number | null>(null);
+
+    // 게임 방 입장 할때
+  useEffect(() => {
+  const onRoomUpdated=({ players,you }: { players: PlayerSnapshot[]; you:string; }) => {
+    console.log("📢 방 업데이트됨:", players);
+    setMySocketId(you);
+      setPlayers(players);
+    };
+
+
+
+    if (!socket.connected) socket.connect();
+    socket.emit("join-room", {});
+
+  socket.on("room-updated",onRoomUpdated);
+
+    return () => {
+      socket.off("room-updated",onRoomUpdated);
+    };
+  }, []);
+
+  const me = players.find(p => p.socketId === mySocketId);
+  const opponent = players.find(p => p.socketId !== mySocketId && mySocketId!=="");
+
   const handleWordResult = (word: string, senderId: string) => {
-    console.log("비교:", senderId, socket.id, senderId === socket.id);
 
-    if (!word || !senderId) return;
+      if (!word || !senderId) return;
 
-    if (senderId === socket.id) {
-      setMyWords((prev) => {
-        const next = [...prev, word];
-        console.log("내 단어 next:", next);
-        return next;
-      });
-    } else {
-      setOpponentWords((prev) => {
-        const next = [...prev, word];
-        console.log("상대 단어 next:", next);
-        return next;
-      });
-    }
+      if (senderId === mySocketId) {
+        setMyWords((prev) =>  [...prev, word] );
+
+      } else {
+        setOpponentWords((prev) => [...prev, word]);
+      }
   };
 
-  ///게임 들어간다
 
-  useEffect(() => {
-    socket.emit("join-room", {
-      nickname: "test",
-    });
-    const onGameStart = ({ chosungPair, endAt }: any) => {
-      setState("PLAY");
-      setChosungPair(chosungPair);
-      setEndAt(endAt);
-    };
+    ///게임 시작할때
 
-    const onWordValidated = (res: any) => {
-      setLastResult(res);
-      if (!res.valid) return;
-      handleWordResult(res.word, res.senderId);
-    };
+    useEffect(() => {
 
-    socket.on("game-start", onGameStart);
-    socket.on("word-validated", onWordValidated);
+      const onGameStart = ({ chosungPair, endAt }: any) => {
+        setState("PLAY");
+        setChosungPair(chosungPair);
+        setEndAt(endAt);
+        setMyWords([]);
+        setOpponentWords([]);
+      };
 
-    return () => {
-      socket.off("game-start", onGameStart);
-      socket.off("word-validated", onWordValidated);
-    };
-  }, []);
+      const onWordValidated = (res: any) => {
+        setLastResult(res);
+        if (!res.valid) return;
+        handleWordResult(res.word, res.senderId);
+      };
 
-  // 타이머 시작
-  useEffect(() => {
-    if (!endAt || state !== "PLAY") return;
+      socket.on("game-start", onGameStart);
+      socket.on("word-validated", onWordValidated);
 
-    const id = setInterval(() => {
-      setTimeLeftMs(Math.max(0, endAt - Date.now()));
-    }, 1000);
+      return () => {
+        
+        socket.off("game-start", onGameStart);
+        socket.off("word-validated", onWordValidated);
+      };
+    }, []);
 
-    return () => clearInterval(id);
-  }, [endAt, state]);
+    // 타이머 시작
+    useEffect(() => {
+      if (!endAt || state !== "PLAY") return;
 
-  //타이머 종료+ 보조안전
-  useEffect(() => {
-    if (state === "PLAY" && endAt && Date.now() >= endAt) {
-      setState("END");
-    }
-  }, [timeLeftMs, state, endAt]);
+      const id = setInterval(() => {
+        setTimeLeftMs(Math.max(0, endAt - Date.now()));
+      }, 1000);
 
-  useEffect(() => {
-    const onGameEnd = () => {
-      setState("END");
-      setEndAt(null);
-    };
+      return () => clearInterval(id);
+    }, [endAt, state]);
 
-    socket.on("game-end", onGameEnd);
-    return () => {
-      socket.off("game-end", onGameEnd);
-    };
-  }, []);
+    //타이머 종료+ 보조안전
+    useEffect(() => {
+      if (state === "PLAY" && endAt && Date.now() >= endAt) {
+        setState("END");
+      }
+    }, [timeLeftMs, state, endAt]);
 
-  return (
-    <>
-      <div
-        style={{
-          position: "fixed",
-          inset: 0,
-          background: "url(/images/마당2.jpg) center / cover no-repeat",
-          zIndex: "1",
-        }}
-      />
-      <div
-        className="dim"
-        style={{
-          position: "fixed",
-          inset: 0,
-          background: "rgba(250, 250, 250, 0.4)",
-          zIndex: "2",
-        }}
-      />
+    useEffect(() => {
+      const onGameEnd = () => {
+        setState("END");
+        setEndAt(null);
+      };
 
-      {state === "END" && <ResultModal />}
+      socket.on("game-end", onGameEnd);
+      return () => {
+        socket.off("game-end", onGameEnd);
+      };
+    }, []);
 
-      <div
-        className="stage"
-        style={{
-          width: "1200px",
-          height: "700px",
-          display: "flex",
-          position: "fixed",
-          top: "50%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
-          justifyContent: "space-between",
-          background: "#fff",
-          borderRadius: "25px",
-          overflow: "hidden",
-          zIndex: "9",
-        }}
-      >
-        <PlayerPanel key="me" words={myWords} />
-        <CenterPlay
-          chosungPair={chosungPair}
-          lastResult={lastResult}
-          onSubmitWord={(word) => socket.emit("submit-word", { word })}
-          timeLeftMs={timeLeftMs}
+    return (
+      <>
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "url(/images/마당2.jpg) center / cover no-repeat",
+            zIndex: "1",
+          }}
         />
-        <PlayerPanel key="opponent" words={opponentWords} />
-      </div>
-    </>
-  );
-};
+        <div
+          className="dim"
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(250, 250, 250, 0.4)",
+            zIndex: "2",
+          }}
+        />
 
-export default GameRoom;
+        {state === "END" && <ResultModal />}
+
+        <div
+          className="stage"
+          style={{
+            width: "1200px",
+            height: "700px",
+            display: "flex",
+            position: "fixed",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            justifyContent: "space-between",
+            background: "#fff",
+            borderRadius: "25px",
+            overflow: "hidden",
+            zIndex: "9",
+          }}
+        >
+        <PlayerPanel key="left-me" nickname={me?.nickname??"대기중"} words={myWords} />
+          <CenterPlay
+            chosungPair={chosungPair}
+            lastResult={lastResult}
+            onSubmitWord={(word) => socket.emit("submit-word", { word })}
+            timeLeftMs={timeLeftMs}
+          />
+          <PlayerPanel key="right-opponent" nickname={opponent?.nickname ?? (players.length < 2 ?"상대 대기중...":"로딩 중")} words={opponentWords} />
+        </div>
+      </>
+    );
+  };
+
+  export default GameRoom;

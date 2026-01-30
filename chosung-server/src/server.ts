@@ -6,7 +6,9 @@ import { randomUUID } from "crypto";
 import gameRouter from "./routes/game.routes";
 import { getRandomChosungPair } from "./game/chosung";
 import { validateWord } from "./game/gameService";
-import type { Room, Player } from "./types";
+import type { Room, Player,PlayerSnapshot } from "./types";
+
+
 
 const app = express();
 
@@ -14,7 +16,8 @@ const app = express();
 app.use(
   cors({
     origin: ["http://localhost:5173", "https://chosung-client.vercel.app"],
-  }),
+  methods: ["GET", "POST"],
+}),
 );
 app.use(express.json());
 
@@ -54,9 +57,11 @@ const createRoom = (): { roomId: string; room: Room } => {
     gameTimer: undefined,
     endAt: undefined,
   };
+
   rooms.set(roomId, room);
   return { roomId, room };
 };
+
 
 /*===================================================================
         
@@ -83,10 +88,10 @@ const getRoomBySocket = (socketId: string) => {
 
 ================================================================================ */
 io.on("connection", (socket: Socket) => {
-  console.log("🟢 socket connected:", socket.id);
+  
   /* ---------- 방 참가 ---------- */
-  socket.on("join-room", ({ nickname }: { nickname: string }) => {
-    console.log("join-room 이벤트 들어옴:", nickname);
+  socket.on("join-room", () => {
+
     const already = getRoomBySocket(socket.id);
     if (already) return;
 
@@ -110,16 +115,34 @@ io.on("connection", (socket: Socket) => {
       [roomId, room] = entry;
     }
 
+    
     // 4. 플레이어 추가
-    room.players.set(socket.id, {
+
+let tempNumber = room.players.size + 1;
+ const tempNickname = `player${tempNumber}`;
+
+room.players.set(socket.id, {
       socketId: socket.id,
-      nickname,
+      nickname: tempNickname,
       roomId, //지금구조에서 역추적 불가해서 여기 저장
     });
 
     socket.join(roomId);
-    console.log(`플레이어 ${nickname} 입장 - roomId: ${roomId}`);
-    console.log(`플레이어 ${nickname}입장 - roomId:${roomId}`);
+
+
+    
+
+//4.5 각 방에 닉네임 ,roomId을 준다.
+
+const playerSnapshot:PlayerSnapshot[] = Array.from(room.players.values()).map(player=>({
+  socketId : player.socketId,
+  nickname : player.nickname,
+}))
+
+io.to(roomId).emit("room-updated",{
+  players:playerSnapshot,
+  you:socket.id,
+})
 
     // 5. 인원 다 차면 COUNTDOWN
     if (room.players.size === 2) {
@@ -132,14 +155,19 @@ io.on("connection", (socket: Socket) => {
 
         room.chosungPair = getRandomChosungPair();
 
+
+        
+        
         /////// timer
 
         const durationMs = 60000;
         const endAt = Date.now() + durationMs;
+        
 
         io.to(roomId).emit("game-start", {
           chosungPair: room.chosungPair,
           endAt,
+         
         });
 
         room.gameTimer = setTimeout(() => {
@@ -164,6 +192,7 @@ io.on("connection", (socket: Socket) => {
       socketId: socket.id,
       word,
     });
+
     const resultData = getRoomBySocket(socket.id);
     if (!resultData) {
       console.log(" room 못 찾음");
@@ -219,7 +248,7 @@ io.on("connection", (socket: Socket) => {
       clearTimeout(room.countdownTimer);
       room.countdownTimer = undefined;
       room.status = "WAIT";
-      io.to(roomId).emit("room-wait");
+      io.to(roomId).emit("room-wait",{});
     }
 
     // 방이 비었으면 삭제

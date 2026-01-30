@@ -1,13 +1,14 @@
 import styles from "./PlayerPanel.module.css";
 
-interface WordsPorps {
+interface PlayerPanelProps {
+  nickname: string;
   words: string[];
 }
 
-const PlayerPanel = ({ words }: WordsPorps) => {
+const PlayerPanel = ({ nickname, words }: PlayerPanelProps) => {
   return (
     <div className={styles.playerWrapper}>
-      <div className={styles.nickName}>닉네임</div>
+      <div className={styles.nickName}>{nickname}</div>
       {words.map((word, idx) => (
         <div
           style={{ width: "200px", height: "100px", background: "#dfdfdf" }}
