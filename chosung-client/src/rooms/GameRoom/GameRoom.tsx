@@ -3,15 +3,17 @@
   import PlayerPanel from "./components/PlayerPanel/PlayerPanel";
   import CenterPlay from "./components/CenterPlay/CenterPlay";
   import ResultModal from "./components/ResultModal";
-  import type { RoomStatus,PlayerSnapshot } from "@/types/domain/room";
+  import type { RoomStatus,PlayerSnapshot,GameEndData } from "@/types/domain/room";
 
   const GameRoom = () => {
   const [roomData,setRoomData]=useState<{
     players:PlayerSnapshot[];
     myId:string;
+    myScore:number
   }>({
-    players:[],
-    myId:""
+    players:[],  //둘을 같이 받기때문
+    myId:"",
+    myScore:0,
   })
 
   const [state, setState] = useState<RoomStatus>("WAIT");
@@ -25,6 +27,9 @@
   const [timeLeftMs, setTimeLeftMs] = useState<number>(0);
   const [endAt, setEndAt] = useState<number | null>(null);
 
+  const [finalData,setFinalData]= useState<GameEndData | null > (null);
+
+
     // 게임 방 입장 할때
   useEffect(() => {
   const onRoomUpdated=({ players }: { players: PlayerSnapshot[]}) => {
@@ -33,7 +38,7 @@
     };
 
 const onSetMyId=({you}:{you:string})=>{
-setRoomData((prev)=>({...prev , myId:you}));
+setRoomData((prev)=>({...prev , myId : you }));
 };
 
 
@@ -50,13 +55,13 @@ socket.on("set-my-id",onSetMyId);
   const opponent = roomData.players.find(p => p.socketId !== roomData.myId && roomData.myId!=="");
 
 
+
   const handleWordResult = (word: string, senderId: string) => {
 
       if (!word || !senderId||!roomData.myId) return;
 
       if (senderId === roomData.myId) {
         setMyWords((prev) =>  [...prev, word] );
-
       } else {
         setOpponentWords((prev) => [...prev, word]);
       }
@@ -67,7 +72,7 @@ socket.on("set-my-id",onSetMyId);
 
     useEffect(() => {
 
-      const onGameStart = ({ chosungPair, endAt }: any) => {
+      const onGameStart = ({ chosungPair, endAt}: any) => {
         setState("PLAY");
         setChosungPair(chosungPair);
         setEndAt(endAt);
@@ -100,7 +105,7 @@ socket.on("set-my-id",onSetMyId);
       }, 1000);
 
       return () => clearInterval(id);
-    }, [endAt, state]);
+    }, [endAt, state,]);
 
     //타이머 종료+ 보조안전
     useEffect(() => {
@@ -110,16 +115,28 @@ socket.on("set-my-id",onSetMyId);
     }, [timeLeftMs, state, endAt]);
 
     useEffect(() => {
-      const onGameEnd = () => {
+      const onGameEnd = (data:GameEndData) => {
+     console.log("게임종료 데이터 수신:",data);
+     
+    
+        const myData= data.scores.find(p=>p.socketId === roomData.myId);
+        const opData = data.scores.find(p=>p.socketId !== roomData.myId);
+
+        if(myData) myData.score;
+        if(opData) opData.score;
+        
+        setFinalData(data);
         setState("END");
         setEndAt(null);
       };
 
       socket.on("game-end", onGameEnd);
-      return () => {
-        socket.off("game-end", onGameEnd);
-      };
-    }, []);
+
+      return () => { socket.off("game-end", onGameEnd)};
+    }, [roomData.myId]);
+console.log("렌더링 체크", "상태:",state,"데이터 존재 여부:",!!finalData);
+
+
 
     return (
       <>
@@ -141,7 +158,7 @@ socket.on("set-my-id",onSetMyId);
           }}
         />
 
-        {state === "END" && <ResultModal />}
+        {state === "END"&&finalData && <ResultModal scores={finalData.scores} />}
 
         <div
           className="stage"

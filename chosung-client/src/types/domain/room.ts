@@ -6,3 +6,11 @@ export interface PlayerSnapshot {
     nickname:string;
 }
 
+export interface GameEndData {
+  words : string[];
+  scores : {
+    socketId : string;
+    nickname : string;
+    score: number;
+  }[];
+}

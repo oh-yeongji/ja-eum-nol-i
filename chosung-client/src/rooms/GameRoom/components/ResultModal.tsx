@@ -1,4 +1,11 @@
-const ResultModal = () => {
+import { GameEndData } from "@/types/domain/room";
+
+const ResultModal = ({scores}:{scores:GameEndData["scores"]}) => {
+  
+  const sortedScores=[...scores].sort((a,b)=>b.score-a.score);
+  const winner = sortedScores[0];
+const loser = sortedScores[1];
+  
   return (
     <div
       style={{
@@ -31,13 +38,15 @@ const ResultModal = () => {
         >
           <li style={{ fontSize: "30px" }}>승자</li>
           <li className="winnerNickname" style={{ fontSize: "20px" }}>
-            아무개1
+           {winner?.nickname}
           </li>
           <li className="winnerScore" style={{ fontSize: "20px" }}>
-            13
+      {winner?.score}점
           </li>
         </ul>
-        <ul
+
+
+       {loser&&( <ul
           className="loser"
           style={{
             background: "#fff",
@@ -49,12 +58,12 @@ const ResultModal = () => {
         >
           <li style={{ fontSize: "30px" }}>패자</li>
           <li className="loserNickname" style={{ fontSize: "20px" }}>
-            아무개2
+           {loser.nickname}
           </li>
           <li className="loserScore" style={{ fontSize: "20px" }}>
-            10
+         {loser?.score}점
           </li>
-        </ul>
+        </ul>)}
       </div>
       <div
         className="totalWordMean"

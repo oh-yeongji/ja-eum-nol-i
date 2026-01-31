@@ -12,10 +12,14 @@ export interface Player {
   socketId: string;
   nickname: string;
   roomId: string;
+  score:number;
 }
 
 
 export type PlayerSnapshot = {
+socketId:string;
   nickname:string;
+  score:number;
 };
+
 

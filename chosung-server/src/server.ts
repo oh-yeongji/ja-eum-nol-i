@@ -126,17 +126,21 @@ io.on("connection", (socket: Socket) => {
       socketId: socket.id,
       nickname: tempNickname,
       roomId, //지금구조에서 역추적 불가해서 여기 저장
+      score:0
     });
 
     socket.join(roomId);
 
-const playerSnapshot:PlayerSnapshot[] = Array.from(room.players.values()).map(player=>({
-  socketId : player.socketId,
-  nickname : player.nickname,
-}))
+const playerSnapshot: PlayerSnapshot[] = Array.from(room.players.values()).map((player) => {
+  return {
+    socketId: player.socketId,
+    nickname: player.nickname,
+    score: player.score,
+  };
+});
 
 io.to(roomId).emit("room-updated",{players: playerSnapshot});
-socket.emit("set-my-id",{you:socket.id});
+socket.emit("set-my-id",{ you : socket.id , yourScore : 0 });
 
     // 5. 인원 다 차면 COUNTDOWN
     if (room.players.size === 2) {
@@ -156,23 +160,30 @@ socket.emit("set-my-id",{you:socket.id});
 
         const durationMs = 60000;
         const endAt = Date.now() + durationMs;
-        
+    
 
         io.to(roomId).emit("game-start", {
           chosungPair: room.chosungPair,
           endAt,
-         
         });
 
         room.gameTimer = setTimeout(() => {
+          
           if (room.status !== "PLAY") return;
 
           room.status = "END";
           room.gameTimer = undefined;
 
           /*--------게임종료-----------*/
+const finalScore = Array.from(room.players.values()).map(p => ({
+  nickname: p.nickname,
+  score: p.score,
+  socketId: p.socketId
+}));
+
           io.to(roomId).emit("game-end", {
             words: Array.from(room.usedWords),
+            scores : finalScore,
           });
         }, durationMs);
       }, 5000);
@@ -182,19 +193,14 @@ socket.emit("set-my-id",{you:socket.id});
   /*---------초성 보내기---------------*/
 
   socket.on("submit-word", async ({ word }) => {
-    console.log("📩 submit-word", {
-      socketId: socket.id,
-      word,
-    });
+
+
 
     const resultData = getRoomBySocket(socket.id);
-    if (!resultData) {
-      console.log(" room 못 찾음");
-      return;
-    }
+    if (!resultData) return;
 
     const { room, roomId } = resultData;
-    console.log("room.status:", room.status);
+
     if (room.status !== "PLAY") {
       return;
     }
@@ -213,11 +219,16 @@ socket.emit("set-my-id",{you:socket.id});
       room.usedWords.add(trimmed);
     }
 
+  const player = room.players.get(socket.id);
+    if(player){
+      player.score += 1;
+    };
+
     io.to(roomId).emit("word-validated", {
       word,
-      valid: result.valid,
-      reason: result.reason,
-      senderId: socket.id,
+      valid : result.valid,
+      reason : result.reason,
+      senderId : socket.id
     });
   });
 
@@ -247,6 +258,11 @@ socket.emit("set-my-id",{you:socket.id});
       rooms.delete(roomId);
     }
   });
+
+
+
+
+
 });
 const PORT = process.env.PORT || 3000;
 httpServer.listen(PORT, () => {
