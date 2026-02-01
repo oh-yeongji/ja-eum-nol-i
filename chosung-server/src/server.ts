@@ -26,7 +26,7 @@ app.use(express.json());
 
 app.use("/api", gameRouter);
 
-const distPath = path.join(process.cwd(), "../chosung-client/dist");
+const distPath = path.join(process.cwd(), "..", "chosung-client", "dist");
 app.use(express.static(distPath));
 
 
