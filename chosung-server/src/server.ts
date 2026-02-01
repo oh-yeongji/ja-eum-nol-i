@@ -2,6 +2,7 @@ import express from "express";
 import { createServer } from "http";
 import cors from "cors";
 import { Server, Socket } from "socket.io";
+import path from "path";
 import { randomUUID } from "crypto";
 import gameRouter from "./routes/game.routes";
 import { getRandomChosungPair } from "./game/chosung";
@@ -15,13 +16,22 @@ const app = express();
 //express cors
 app.use(
   cors({
-    origin: ["http://localhost:5173", "https://chosung-client.vercel.app"],
+    origin: ["http://localhost:5173", "https://chosung-client.vercel.app", "https://chosung-game.onrender.com"],
   methods: ["GET", "POST"],
 }),
 );
 app.use(express.json());
 
 app.use("/api", gameRouter);
+
+const distPath= path.join(__dirname,"../../chosung-client/dist")
+app.use(express.static(distPath));
+
+app.get("*",(req,res)=>{
+if(!req.path.startsWith("/api")){
+res.sendFile(path.join(distPath,"index.html"));
+}
+})
 
 const httpServer = createServer(app);
 
