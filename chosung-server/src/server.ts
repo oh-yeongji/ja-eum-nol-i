@@ -49,7 +49,7 @@ const io = new Server(httpServer, {
   transports: ["polling", "websocket"]
 });
 
-app.get("*", (req, res) => {
+app.get(/.*/, (req, res) => {
   if (!req.path.startsWith("/api") && !req.path.startsWith("/socket.io")) {
     res.sendFile(path.join(distPath, "index.html"), (err) => {
       if (err) {
