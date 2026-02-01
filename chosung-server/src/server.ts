@@ -27,11 +27,11 @@ app.use("/api", gameRouter);
 const distPath= path.join(__dirname,"../../chosung-client/dist")
 app.use(express.static(distPath));
 
-app.get("*",(req,res)=>{
+app.get( /.*/ , (req,res)=>{
 if(!req.path.startsWith("/api")){
 res.sendFile(path.join(distPath,"index.html"));
 }
-})
+});
 
 const httpServer = createServer(app);
 
