@@ -32,6 +32,12 @@
 
     // 게임 방 입장 할때
   useEffect(() => {
+
+if(!socket.connected){
+  socket.connect();
+}
+socket.emit("join-room");
+
   const onRoomUpdated=({ players }: { players: PlayerSnapshot[]}) => {
 
     setRoomData((prev) => ({ ...prev, players }));
