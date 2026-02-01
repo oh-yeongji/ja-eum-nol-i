@@ -17,7 +17,7 @@ const app = express();
 //express cors
 app.use(
   cors({
-    origin: ["http://localhost:5173", "https://chosung-client.vercel.app", "https://chosung-game.onrender.com"],
+    origin: ["http://localhost:5173", "https://chosung-game.vercel.app", "https://chosung-game.onrender.com"],
   methods: ["GET", "POST"],
   credentials: true
 }),
@@ -33,13 +33,13 @@ app.use(express.static(distPath));
 const httpServer = createServer(app);
 
 
-//socket cors
+
 //socket cors
 const io = new Server(httpServer, {
   cors: {
     origin: [
       "http://localhost:5173", 
-      "https://chosung-client.vercel.app", 
+      "https://chosung-game.vercel.app", 
       "https://chosung-game.onrender.com"
     ],
     methods: ["GET", "POST"],
