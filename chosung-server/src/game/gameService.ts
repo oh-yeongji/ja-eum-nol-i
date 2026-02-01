@@ -13,7 +13,6 @@ export async function validateWord({
   word,
   usedWords,
 }: ValidateParams) {
-  console.log(" NEW VALIDATEWORD CALLED!!!!!");
   const trimmed = word.trim();
 
   if (!trimmed || trimmed === "") {
@@ -22,6 +21,17 @@ export async function validateWord({
       reason: "단어를 입력하세요.",
     };
   }
+
+if(trimmed.length !== 2) {
+  return {
+    valid:false,
+    reason: "두 단어만 입력하세요."
+  }
+}
+
+if(!/^[가-힣]+$/.test(trimmed)){
+  return{valid:false, reason: "한글만 입력 가능합니다."}
+}
 
   if (usedWords.has(trimmed)) {
     return {
@@ -33,7 +43,7 @@ export async function validateWord({
   const extracted = extractTwoChosungs(trimmed);
 
   if (!extracted) {
-    return { valid: false, reason: "초성이 추출되지않음." };
+    return { valid: false, reason: "단어를 입력하세요" };
   }
 
   if (extracted[0] !== chosungPair[0] || extracted[1] !== chosungPair[1]) {
@@ -42,22 +52,14 @@ export async function validateWord({
 
   const dictResult = await checkWordDetail(trimmed);
   console.log("DICT RESULT RAW:", dictResult);
-  const { exist, isNoun } = dictResult;
-  console.log("exist:", exist, "isNoun:", isNoun);
+  const { exist } = dictResult;
+  console.log("exist:", exist);
   if (!exist) {
     return {
       valid: false,
       reason: "사전에 없는 단어입니다.",
     };
   }
-
-  if (!isNoun) {
-    return {
-      valid: false,
-      reason: "명사가 아닙니다.",
-    };
-  }
-
 
   return { valid: true, word: trimmed };
 }

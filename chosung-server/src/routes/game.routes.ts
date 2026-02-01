@@ -30,9 +30,6 @@ gameRouter.get("/check-word", async (req, res) => {
   if (!dictResult.exist) {
     return res.json({ valid: false, reason: "존재하지않는 단어입니다." });
   }
-  if (!dictResult.isNoun) {
-    return res.json({ valid: false, reason: "명사가 아닙니다." });
-  }
 
   // 통과 시
   usedWords.add(trimmed);

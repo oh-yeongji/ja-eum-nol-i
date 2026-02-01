@@ -194,18 +194,12 @@ const finalScore = Array.from(room.players.values()).map(p => ({
 
   socket.on("submit-word", async ({ word }) => {
 
-
-
     const resultData = getRoomBySocket(socket.id);
-    if (!resultData) return;
+    if (!resultData || resultData.room.status !=="PLAY") return;
 
     const { room, roomId } = resultData;
+    const trimmed = word.trim();
 
-    if (room.status !== "PLAY") {
-      return;
-    }
-    console.log("chosungPair (server):", room.chosungPair);
-    console.log("submitted word:", word);
 
     //2.validate
     const result = await validateWord({
@@ -215,14 +209,12 @@ const finalScore = Array.from(room.players.values()).map(p => ({
     });
 
     if (result.valid) {
-      const trimmed = word.trim();
       room.usedWords.add(trimmed);
-    }
-
   const player = room.players.get(socket.id);
     if(player){
-      player.score += 1;
+      player.score += 10;
     };
+    }
 
     io.to(roomId).emit("word-validated", {
       word,

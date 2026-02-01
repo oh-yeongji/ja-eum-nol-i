@@ -6,10 +6,16 @@ interface PlayerPanelProps {
 }
 
 const PlayerPanel = ({ nickname, words }: PlayerPanelProps) => {
+
+const currentPage = Math.floor(( words.length - 1) / 5);
+const startIndex = currentPage * 5;
+
+const currentWords=words.slice(startIndex , startIndex+5);
+
   return (
     <div className={styles.playerWrapper}>
-      <div className={styles.nickName}>{nickname}</div>
-      {words.map((word, idx) => (
+      <div className={styles.nickname}>{nickname}</div>
+      {currentWords.map((word, idx) => (
         <div
           style={{ width: "200px", height: "100px", background: "#dfdfdf" }}
           key={idx}

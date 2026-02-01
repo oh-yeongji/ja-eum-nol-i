@@ -39,8 +39,16 @@ const CenterPlay = ({
       setWord("");
       return;
     }
-    onSubmitWord(trimmed);
-    setWord("");
+
+if(trimmed.length !== 2 ){
+ showAlert("두 단어만 입력하세요.");
+setWord("");
+return;
+}
+
+
+onSubmitWord(trimmed);
+setWord("");
   };
 
   useEffect(() => {

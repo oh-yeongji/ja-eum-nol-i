@@ -18,6 +18,9 @@ const loser = sortedScores[1];
         zIndex: "9999",
       }}
     >
+
+
+      {/*점수 패널 */}
       <div
         className="scorePanel"
         style={{
@@ -26,6 +29,9 @@ const loser = sortedScores[1];
           justifyContent: "space-around",
         }}
       >
+
+
+        {/*승자 닉네임/점수*/}
         <ul
           className="winner"
           style={{
@@ -45,7 +51,7 @@ const loser = sortedScores[1];
           </li>
         </ul>
 
-
+{/*패자 닉네임/점수*/}
        {loser&&( <ul
           className="loser"
           style={{
@@ -65,15 +71,21 @@ const loser = sortedScores[1];
           </li>
         </ul>)}
       </div>
+
+
+{/* 단어뜻 모음*/}
       <div
-        className="totalWordMean"
+        className="totalWordMeans"
         style={{ display: "flex", justifyContent: "space-around" }}
       >
         <ul
           className="winner"
           style={{ background: "#ccc", width: "300px", height: "250px" }}
         >
-          승자 단어뜻
+          <div></div>
+          <div>
+            어떤 사람이나 존재를 몹시 아끼고 귀중히 여기는 마음. 또는 그런 일.
+          </div>
         </ul>
         <ul
           className="loser"
