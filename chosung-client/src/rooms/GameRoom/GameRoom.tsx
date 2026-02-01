@@ -94,7 +94,7 @@ socket.on("set-my-id",onSetMyId);
         socket.off("game-start", onGameStart);
         socket.off("word-validated", onWordValidated);
       };
-    }, [roomData.myId]);
+    }, []);
 
     // 타이머 시작
     useEffect(() => {
@@ -137,6 +137,12 @@ socket.on("set-my-id",onSetMyId);
 console.log("렌더링 체크", "상태:",state,"데이터 존재 여부:",!!finalData);
 
 
+
+<div>
+  <p>현재 상태: {state}</p>
+  <p>내 닉네임: {me?.nickname}</p>
+  <p>플레이어 리스트 수: {roomData.players.length}</p>
+</div>
 
     return (
       <>
@@ -183,6 +189,7 @@ console.log("렌더링 체크", "상태:",state,"데이터 존재 여부:",!!fin
             lastResult={lastResult}
             onSubmitWord={(word) => socket.emit("submit-word", { word })}
             timeLeftMs={timeLeftMs}
+            state={state}
           />
           <PlayerPanel key="right-opponent" nickname={opponent && opponent.socketId !== roomData.myId ? opponent.nickname :(roomData.players.length < 2 ?"상대 대기중...":"로딩 중")} words={opponentWords} />
         </div>

@@ -13,6 +13,7 @@ interface Props {
   } | null;
   onSubmitWord: (word: string) => void;
   timeLeftMs: number;
+  state: string;
 }
 
 const CenterPlay = ({
@@ -20,11 +21,12 @@ const CenterPlay = ({
   lastResult,
   onSubmitWord,
   timeLeftMs,
+  state
 }: Props) => {
   const [word, setWord] = useState("");
   const [alert, setAlert] = useState<string | null>(null);
 
-  const isTimeOver = timeLeftMs <= 0;
+  const isTimeOver = state !== "PLAY" ||timeLeftMs <= 0;
 
   const showAlert = (msg: string) => {
     setAlert(msg);
@@ -56,6 +58,8 @@ setWord("");
       showAlert(lastResult.reason);
     }
   }, [lastResult]);
+
+
 
   return (
     <div className={styles.centerWrapper}>

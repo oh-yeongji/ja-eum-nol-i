@@ -38,7 +38,7 @@ const httpServer = createServer(app);
 //socket cors
 const io = new Server(httpServer, {
   cors: {
-    origin: ["http://localhost:5173", "https://chosung-client.vercel.app"],
+    origin: ["http://localhost:5173", "https://chosung-client.vercel.app", "https://chosung-client.vercel.app"],
     methods: ["GET", "POST"],
   },
 });
