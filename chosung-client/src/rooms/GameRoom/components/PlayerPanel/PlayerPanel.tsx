@@ -1,3 +1,4 @@
+import { useDebugValue, useEffect, useRef } from "react";
 import styles from "./PlayerPanel.module.css";
 
 interface PlayerPanelProps {
@@ -7,22 +8,29 @@ interface PlayerPanelProps {
 
 const PlayerPanel = ({ nickname, words }: PlayerPanelProps) => {
 
-const currentPage = Math.floor(( words.length - 1) / 5);
-const startIndex = currentPage * 5;
-
-const currentWords=words.slice(startIndex , startIndex+5);
+const scrollRef = useRef<HTMLDivElement>(null);
+  useEffect(()=>{
+    if(scrollRef.current){
+      scrollRef.current.scrollTop=scrollRef.current.scrollHeight;
+    }
+  },[words]);
 
   return (
     <div className={styles.playerWrapper}>
       <div className={styles.nickname}>{nickname}</div>
-      {currentWords.map((word, idx) => (
+     
+     <div className={styles.wordListContainer} ref={scrollRef}>
+     
+      {words.map((word, idx) => (
         <div
-          style={{ width: "200px", height: "100px", background: "#dfdfdf" }}
+         className={styles.wordItem}
           key={idx}
         >
           {word}
         </div>
       ))}
+
+      </div>
     </div>
   );
 };
