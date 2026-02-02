@@ -64,7 +64,7 @@ socket.on("set-my-id",onSetMyId);
 
   const handleWordResult = (word: string, senderId: string) => {
 
-      if (!word || !senderId||!roomData.myId) return;
+      if ( !word || !senderId ||!roomData.myId ) return;
 
       if (senderId === roomData.myId) {
         setMyWords((prev) =>  [...prev, word] );
@@ -87,9 +87,20 @@ socket.on("set-my-id",onSetMyId);
       };
 
       const onWordValidated = (res: any) => {
+  console.log("나의 ID:", roomData.myId);
+  console.log("서버가 보낸 보낸이 ID:", res.senderId);
+
         setLastResult(res);
         if (!res.valid) return;
-        handleWordResult(res.word, res.senderId);
+
+        // handleWordResult(res.word, res.senderId);
+
+if (res.senderId === socket.id) { 
+    setMyWords((prev) => [...prev, res.word]);
+  } else {
+    setOpponentWords((prev) => [...prev, res.word]);
+  }
+
       };
 
       socket.on("game-start", onGameStart);
