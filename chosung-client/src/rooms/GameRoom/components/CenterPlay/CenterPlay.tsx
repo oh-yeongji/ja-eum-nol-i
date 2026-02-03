@@ -63,6 +63,7 @@ setWord("");
 
   return (
     <div className={styles.centerWrapper}>
+       <Timer timeLeftMs={timeLeftMs} />
       <div className={styles.chosungContainer}>
         <div className={styles.chosungScreen}>
           <div className={styles.firstCho}>{chosungPair[0]}</div>
@@ -97,7 +98,7 @@ setWord("");
               Enter
             </button>
           </div>
-          <Timer timeLeftMs={timeLeftMs} />
+         
         </div>
       </div>
     </div>

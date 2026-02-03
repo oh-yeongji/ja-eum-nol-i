@@ -1,55 +1,112 @@
 .centerWrapper {
   display: flex;
   flex-direction: column;
+  width:30%;
+  background: #fff;
 }
 
 .chosungContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   height: 200px;
-  background: #fff;
-  margin-top: 40px;
-  padding: 20px;
+  margin-top: 80px;
+  /* padding: 20px; */
+  /* background: #ccc; */
 }
 
 .chosungScreen {
   display: flex;
   justify-content: space-between;
   width: 200px;
+  background: gray;
+  padding: 50px;
+   border-top: 2px solid #ffffff;
+  border-left: 2px solid #ffffff;
+  border-right: 2px solid #404040;
+  border-bottom: 2px solid #404040;
+  box-shadow: none; 
 }
 
 .firstCho {
   width: 70px;
   height: 70px;
   font-size: 40px;
-  background: #ddd;
+  background: #fff;
   text-align: center;
+  line-height: 70px;
+  border-top: 2px solid #ffffff;
+  border-left: 2px solid #ffffff;
+  border-right: 2px solid #404040;
+  border-bottom: 2px solid #404040;
+  box-shadow: none; 
 }
 
 .secondCho {
   width: 70px;
   height: 70px;
   font-size: 40px;
-  background: #ddd;
+  background: #fff;
   text-align: center;
+  line-height: 70px;
+  border-top: 2px solid #ffffff;
+  border-left: 2px solid #ffffff;
+  border-right: 2px solid #404040;
+  border-bottom: 2px solid #404040;
+  box-shadow: none; 
 }
 
 .inputGroup {
   display: flex;
+  justify-content: center;
+  align-items: center;
+  width:100%;
+  height: 80px;
+  /* padding:5px; */
+  background: #ddd;
+  position: absolute;
+  left:0;
+  bottom: 0;
 }
 
 .inputGroup input[type="text"] {
-  width: 150px;
-  height: 30px;
+  display: block;
+  width: 300px;
+  height: 35px; 
+  padding: 0;
   font-size: 20px;
-  border: 0;
-  background: #fff;
+  border: 2px inset #eee; 
+  padding: 0 5px;
+  outline: none;
+  cursor: text;
+  margin:0;
+  box-sizing: border-box;
+  margin-left:70px;  
 }
 
 .submitBtn {
-  width: 50px;
-  height: 30px;
-  margin-top: 30px;
-  margin-left: 10px;
-  font-size: 20px;
-  line-height: 30px;
-  background: #fff;
+  width: 100px;
+  height: 35px;
+  padding: 0;
+  margin: 0 0 0 30px;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:#ddd;
+  cursor: pointer;
+  border-top: 2px solid #ffffff;
+  border-left: 2px solid #ffffff;
+  border-right: 2px solid #404040;
+  border-bottom: 2px solid #404040;
+}
+
+.submitBtn:active {
+  border-top: 2px solid #404040;
+  border-left: 2px solid #404040;
+  border-right: 2px solid #ffffff;
+  border-bottom: 2px solid #ffffff;
+  padding-top: 2px;
+  padding-left: 2px;
+  background: #a0a0a0; 
 }

@@ -167,21 +167,14 @@ console.log("렌더링 체크", "상태:",state,"데이터 존재 여부:",!!fin
           style={{
             position: "fixed",
             inset: 0,
-            background: "url(/images/마당2.jpg) center / cover no-repeat",
+            background:"#1B2E57",
             zIndex: "1",
           }}
         />
-        <div
-          className="dim"
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(250, 250, 250, 0.4)",
-            zIndex: "2",
-          }}
-        />
-
-        {state === "END"&&finalData && <ResultModal scores={finalData.scores} />}
+    
+ <div style={{position:"absolute", top:0, width:"100%", height:"75px", background:"#fff", opacity:"0.5", fontSize:"20px", zIndex:9999}}>레디 버튼은 두명이 입장했을때 활성화 됩니다.한명이 레디버튼을 누르면 다른 사람이 누르지않아도 10초 뒤 바로 시작됩니다. 두명이 레디를 누르면 바로 게임이 시작합니다.</div>
+     
+        {/* {state === "END"&&finalData && <ResultModal scores={finalData.scores} />} */}
 
         <div
           className="stage"
@@ -189,13 +182,12 @@ console.log("렌더링 체크", "상태:",state,"데이터 존재 여부:",!!fin
             width: "1200px",
             height: "700px",
             display: "flex",
-            position: "fixed",
-            top: "50%",
+            position: "absolute",
+            top: "55%",
             left: "50%",
             transform: "translate(-50%, -50%)",
             justifyContent: "space-between",
             background: "#fff",
-            borderRadius: "25px",
             overflow: "hidden",
             zIndex: "9",
           }}
@@ -208,7 +200,7 @@ console.log("렌더링 체크", "상태:",state,"데이터 존재 여부:",!!fin
             timeLeftMs={timeLeftMs}
             state={state}
           />
-          <PlayerPanel key="right-opponent" nickname={opponent && opponent.socketId !== roomData.myId ? opponent.nickname :(roomData.players.length < 2 ?"상대 대기중...":"로딩 중")} words={opponentWords} />
+          <PlayerPanel key="right-opponent" nickname={opponent && opponent.socketId !== roomData.myId ? opponent.nickname :(roomData.players.length < 2 ?"상대를 기다리는중...":"로딩 중")} words={opponentWords} />
         </div>
       </>
     );
