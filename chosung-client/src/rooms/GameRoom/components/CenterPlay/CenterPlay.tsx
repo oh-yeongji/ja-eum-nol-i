@@ -59,8 +59,6 @@ setWord("");
     }
   }, [lastResult]);
 
-
-
   return (
     <div className={styles.centerWrapper}>
        <Timer timeLeftMs={timeLeftMs} />
@@ -70,9 +68,9 @@ setWord("");
           <div className={styles.secondCho}>{chosungPair[1]}</div>
         </div>
 
+ <div className={styles.playerStatusBtn}><b>READY </b></div>
+ {alert && <div className={styles.chosungAlert}>{alert}</div>}
         <div className={styles.inputContainer}>
-          {alert && <div className={styles.chosungAlert}>{alert}</div>}
-
           <div className={styles.inputGroup}>
             <input
               type="text"
@@ -101,6 +99,8 @@ setWord("");
          
         </div>
       </div>
+
+     
     </div>
   );
 };

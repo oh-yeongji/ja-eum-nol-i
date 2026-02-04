@@ -1,5 +1,6 @@
   import { useState, useEffect } from "react";
   import { socket } from "@/socket/socket";
+  import styles from "./GameRoom.module.css";
   import PlayerPanel from "./components/PlayerPanel/PlayerPanel";
   import CenterPlay from "./components/CenterPlay/CenterPlay";
   import ResultModal from "./components/ResultModal";
@@ -164,15 +165,11 @@ console.log("렌더링 체크", "상태:",state,"데이터 존재 여부:",!!fin
     return (
       <>
         <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            background:"#1B2E57",
-            zIndex: "1",
-          }}
+        className={styles['out-of-stage']}
         />
     
- <div style={{position:"absolute", top:0, width:"100%", height:"75px", background:"#fff", opacity:"0.5", fontSize:"20px", zIndex:9999}}>레디 버튼은 두명이 입장했을때 활성화 됩니다.한명이 레디버튼을 누르면 다른 사람이 누르지않아도 10초 뒤 바로 시작됩니다. 두명이 레디를 누르면 바로 게임이 시작합니다.</div>
+ <div
+ style={{position:"absolute", top:0, width:"100%", height:"75px", background:"#fff", opacity:"0.5", fontSize:"20px", zIndex:9999}}>레디 버튼은 두명이 입장했을때 활성화 됩니다.한명이 레디버튼을 누르면 다른 사람이 누르지않아도 10초 뒤 바로 시작됩니다. 두명이 레디를 누르면 바로 게임이 시작합니다.</div>
      
         {/* {state === "END"&&finalData && <ResultModal scores={finalData.scores} />} */}
 
@@ -190,8 +187,14 @@ console.log("렌더링 체크", "상태:",state,"데이터 존재 여부:",!!fin
             background: "#fff",
             overflow: "hidden",
             zIndex: "9",
+            border:"1px solid #C0C0C0",
           }}
         >
+
+          <div className={styles.header}>
+            <span className={styles.titleName} style={{ fontWeight: "bold", marginLeft: "4px" }}>초성 게임</span>
+            <button className={styles.closeBtn}>X</button>
+          </div>
         <PlayerPanel key="left-me" nickname={me?.nickname??"대기중"} words={myWords} />
           <CenterPlay
             chosungPair={chosungPair}

@@ -1,16 +1,24 @@
+@font-face {
+    font-family: 'KblJumpCondensed';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2601-5@1.0/KBLJump_EB_CondensedTTF.woff2') format('woff2');
+    font-weight: normal;
+    font-display: swap;
+}
+
 .centerWrapper {
-  display: flex;
-  flex-direction: column;
+  /* display: flex; */
+  /* flex-direction: column; */
   width:30%;
   background: #fff;
+  justify-content: space-between;
 }
 
 .chosungContainer {
-  display: flex;
+  /* display: flex; */
   flex-direction: column;
   align-items: center;
   height: 200px;
-  margin-top: 80px;
+  margin-top: 0px;
   /* padding: 20px; */
   /* background: #ccc; */
 }
@@ -21,7 +29,7 @@
   width: 200px;
   background: gray;
   padding: 50px;
-   border-top: 2px solid #ffffff;
+  border-top: 2px solid #ffffff;
   border-left: 2px solid #ffffff;
   border-right: 2px solid #404040;
   border-bottom: 2px solid #404040;
@@ -56,7 +64,22 @@
   box-shadow: none; 
 }
 
-.inputGroup {
+.playerStatusBtn {
+  /* display: flex; */
+  align-items: center;
+  justify-content: center;
+  width: 200px; 
+  height: 60px;
+  background: #C0C0C0;
+  font-size: 24px;
+  border-top: 2px solid #ffffff;
+  border-left: 2px solid #ffffff;
+  border-right: 2px solid #404040;
+  border-bottom: 2px solid #404040;
+  font-family: 'KblJumpCondensed', sans-serif;
+}
+
+.inputContainer {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -65,12 +88,14 @@
   /* padding:5px; */
   background: #ddd;
   position: absolute;
-  left:0;
   bottom: 0;
+  left:0;
 }
-
+.inputGroup{
+  display: flex;
+  justify-content: center;
+}
 .inputGroup input[type="text"] {
-  display: block;
   width: 300px;
   height: 35px; 
   padding: 0;

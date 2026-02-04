@@ -1,3 +1,5 @@
+@import url('https://cdn.jsdelivr.net/npm/galmuri@latest/dist/galmuri.css');
+
 .playerWrapper {
   display: flex;
   flex-direction: column;
@@ -23,7 +25,12 @@
 }
 
 .nickname {
-
+  font-family: 'Galmuri9', sans-serif;
+  font-size: 14px; 
+  box-sizing: border-box;
+  z-index: 10;
+  -webkit-font-smoothing: none;
+  text-rendering: pixelated;
 }
 
 .editBtn{
@@ -55,7 +62,7 @@
   flex: 1;
   height: 200px;
 
-  /* 임시 */
+  /* 임시(니중에 스크롤 만들거임) */
   overflow-y: auto; 
   gap: 10px;
   padding: 20px;
@@ -64,28 +71,25 @@
   scrollbar-width: none;  
 }
 
-.wordItem{
+.wordItem {
   display: flex;
-  width: 100px;
-  height: 70px;
+  width: 110px;
+  height: 55px;
   background: #C0C0C0;
   align-items: center;
-  justify-content: flex-start;
-  font-size: 20px;
-  padding-left: 20px;
-  margin-top:20px;
-  margin-bottom: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  justify-content: center;
   flex-shrink: 0;
-  color:#FFD700;
-  /* color: #FDCB02; */
-  text-shadow: 2px 2px #000000;
-  font-family: 'NeoDunggeunmo', cursive; 
+  font-family: 'Galmuri9', sans-serif;
+  font-size: 18px; 
+  color: #fff; 
+  text-shadow: 1px 1px 0 #000000; 
   border-top: 2px solid #ffffff;
   border-left: 2px solid #ffffff;
-  border-right: 2px solid #404040;
-  border-bottom: 2px solid #404040;
-  box-shadow: none; 
+  border-right: 2px solid #808080;
+  border-bottom: 2px solid #808080;
+  -webkit-font-smoothing: none;
+  text-rendering: pixelated;
+  margin: 10px 0;
 }
 
 .wordListContainer::-webkit-scrollbar {
