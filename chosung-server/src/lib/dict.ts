@@ -4,43 +4,50 @@ dotenv.config();
 
 interface DictCheckResult {
   exist: boolean;
+  definitions: string[];
 }
 
-// 입력 단어 검증
 export async function checkWordDetail(word: string): Promise<DictCheckResult> {
-  if (!word || typeof word !== "string") return { exist: false};
+  const failResult: DictCheckResult = { exist: false, definitions: [] };
+
+  if (!word || typeof word !== "string") return failResult;
 
   const API_KEY = process.env.KORDIC_API_KEY;
+  if (!API_KEY) {
+    console.error("API 키가 설정되지 않았습니다.");
+    return failResult;
+  }
 
-  if (!API_KEY) return { exist: false};
+  const url = `https://stdict.korean.go.kr/api/search.do?key=${API_KEY}&type_search=search&req_type=xml&q=${encodeURIComponent(word)}`;
 
-  const url = `https://stdict.korean.go.kr/api/search.do?key=${API_KEY}&type_search=search&req_type=xml&q=${encodeURIComponent(
-    word
-  )}`;
   try {
     const res = await fetch(url);
     const raw = await res.text();
 
-    if (!raw.trim()) return { exist: false };
+    if (!raw.trim()) return failResult;
 
     const parser = new XMLParser({ ignoreAttributes: false });
     const data = parser.parse(raw);
 
     const total = Number(data?.channel?.total ?? 0);
-    if (total === 0) return { exist: false};
+    if (total === 0) return failResult;
 
-    //단일 객체인지 배열인지 확인
-    const items = Array.isArray(data.channel.item)
-      ? data.channel.item // 배열이 맞으면 그대로
-      : [data.channel.item]; // 단일 객체이면 배열 씌우기
+    const rawItems = data.channel.item;
+    const items = Array.isArray(rawItems) ? rawItems : [rawItems];
 
-    const firstItem = items[0];
-    
+    const allDefinitions: string[] = items.map((item: any) => {
+      const def = item.sense?.definition || item.definition || "뜻 정보 없음";
+      return typeof def === "string"
+        ? def.replace(/<[^>]*>?/gm, "")
+        : "뜻 정보 없음";
+    });
+
     return {
       exist: true,
+      definitions: allDefinitions,
     };
   } catch (err) {
-    console.error("checkWordDetail  error", err);
-    return { exist: false};
+    console.error("checkWordDetail error:", err);
+    return failResult;
   }
 }

@@ -11,7 +11,16 @@ const Timer = ({ timeLeftMs }: TimerProps) => {
 
   return (
     <>
-      <div style={{ height: "100px", background: "#ccc" , marginTop:"100px",fontSize:"50px" , textAlign:"center",lineHeight:"110px"}}>
+      <div
+        style={{
+          height: "100px",
+          background: "#ccc",
+          marginTop: "100px",
+          fontSize: "50px",
+          textAlign: "center",
+          lineHeight: "110px",
+        }}
+      >
         {mm}:{ss}
       </div>
     </>

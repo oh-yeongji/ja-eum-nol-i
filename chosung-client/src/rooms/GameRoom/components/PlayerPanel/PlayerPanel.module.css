@@ -1,44 +1,44 @@
-@import url('https://cdn.jsdelivr.net/npm/galmuri@latest/dist/galmuri.css');
+@import url("https://cdn.jsdelivr.net/npm/galmuri@latest/dist/galmuri.css");
 
 .playerWrapper {
   display: flex;
   flex-direction: column;
   align-items: center;
-  width:35%;
+  width: 35%;
   height: 100%;
   /* background: #ccc; */
-  background:#fff;
+  background: #fff;
 }
 
-.nicknameContainer{
+.nicknameContainer {
   display: flex;
   flex-shrink: 0;
-  justify-content:center;
+  justify-content: center;
   align-items: center;
   width: 50%;
   height: 50px;
   font-size: 20px;
-  background:#ddd;
+  background: #ddd;
   margin-top: 50px;
   gap: 20px;
   /* padding:0 50px; */
 }
 
 .nickname {
-  font-family: 'Galmuri9', sans-serif;
-  font-size: 14px; 
+  font-family: "Galmuri9", sans-serif;
+  font-size: 14px;
   box-sizing: border-box;
   z-index: 10;
   -webkit-font-smoothing: none;
   text-rendering: pixelated;
 }
 
-.editBtn{
-  background: #C0C0C0;
+.editBtn {
+  background: #c0c0c0;
   /* font-family: 'NeoDunggeunmo', cursive; */
   font-size: 14px;
   padding: 4px 8px;
- 
+
   cursor: pointer;
   border-radius: 0;
   border-top: 2px solid #ffffff;
@@ -53,7 +53,7 @@
   border-left: 2px solid #404040;
   border-right: 2px solid #ffffff;
   border-bottom: 2px solid #ffffff;
-  padding: 5px 7px 3px 9px; 
+  padding: 5px 7px 3px 9px;
 }
 
 .wordListContainer {
@@ -63,26 +63,26 @@
   height: 200px;
 
   /* 임시(니중에 스크롤 만들거임) */
-  overflow-y: auto; 
+  overflow-y: auto;
   gap: 10px;
   padding: 20px;
   box-sizing: border-box;
-  -ms-overflow-style: none; 
-  scrollbar-width: none;  
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 .wordItem {
   display: flex;
   width: 110px;
   height: 55px;
-  background: #C0C0C0;
+  background: #c0c0c0;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  font-family: 'Galmuri9', sans-serif;
-  font-size: 18px; 
-  color: #fff; 
-  text-shadow: 1px 1px 0 #000000; 
+  font-family: "Galmuri9", sans-serif;
+  font-size: 18px;
+  color: #fff;
+  text-shadow: 1px 1px 0 #000000;
   border-top: 2px solid #ffffff;
   border-left: 2px solid #ffffff;
   border-right: 2px solid #808080;

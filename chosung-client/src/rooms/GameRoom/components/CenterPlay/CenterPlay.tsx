@@ -21,12 +21,12 @@ const CenterPlay = ({
   lastResult,
   onSubmitWord,
   timeLeftMs,
-  state
+  state,
 }: Props) => {
   const [word, setWord] = useState("");
   const [alert, setAlert] = useState<string | null>(null);
 
-  const isTimeOver = state !== "PLAY" ||timeLeftMs <= 0;
+  const isTimeOver = state !== "PLAY" || timeLeftMs <= 0;
 
   const showAlert = (msg: string) => {
     setAlert(msg);
@@ -42,15 +42,14 @@ const CenterPlay = ({
       return;
     }
 
-if(trimmed.length !== 2 ){
- showAlert("두 단어만 입력하세요.");
-setWord("");
-return;
-}
+    if (trimmed.length !== 2) {
+      showAlert("두 단어만 입력하세요.");
+      setWord("");
+      return;
+    }
 
-
-onSubmitWord(trimmed);
-setWord("");
+    onSubmitWord(trimmed);
+    setWord("");
   };
 
   useEffect(() => {
@@ -61,15 +60,18 @@ setWord("");
 
   return (
     <div className={styles.centerWrapper}>
-       <Timer timeLeftMs={timeLeftMs} />
+      <Timer timeLeftMs={timeLeftMs} />
       <div className={styles.chosungContainer}>
         <div className={styles.chosungScreen}>
           <div className={styles.firstCho}>{chosungPair[0]}</div>
           <div className={styles.secondCho}>{chosungPair[1]}</div>
         </div>
 
- <div className={styles.playerStatusBtn}><b>READY </b></div>
- {alert && <div className={styles.chosungAlert}>{alert}</div>}
+        <div className={styles.playerStatusBtn}>
+          <b> READY </b>
+        </div>
+
+        {alert && <div className={styles.chosungAlert}>{alert}</div>}
         <div className={styles.inputContainer}>
           <div className={styles.inputGroup}>
             <input
@@ -78,16 +80,16 @@ setWord("");
               value={word}
               disabled={isTimeOver}
               onChange={(e) => setWord(e.target.value)}
-              onKeyDown={(e:React.KeyboardEvent<HTMLInputElement>) => {
-                if(e.nativeEvent.isComposing) return;
-                if(e.key === "Enter"){
+              onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                if (e.nativeEvent.isComposing) return;
+                if (e.key === "Enter") {
                   handleSubmit();
                 }
               }}
             />
             <button
-            type="button"
-            className={styles.submitBtn}
+              type="button"
+              className={styles.submitBtn}
               onClick={() => {
                 if (isTimeOver) return;
                 handleSubmit();
@@ -96,11 +98,8 @@ setWord("");
               Enter
             </button>
           </div>
-         
         </div>
       </div>
-
-     
     </div>
   );
 };

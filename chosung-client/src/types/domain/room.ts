@@ -2,15 +2,15 @@
 export type RoomStatus = "WAIT" | "READY" | "PLAY" | "END";
 
 export interface PlayerSnapshot {
-    socketId:string;
-    nickname:string;
+  socketId: string;
+  nickname: string;
 }
 
 export interface GameEndData {
-  words : string[];
-  scores : {
-    socketId : string;
-    nickname : string;
+  words: { word: string; definitions: string[]; senderId: string }[];
+  scores: {
+    socketId: string;
+    nickname: string;
     score: number;
   }[];
 }

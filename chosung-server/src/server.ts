@@ -8,19 +8,21 @@ import { randomUUID } from "crypto";
 import gameRouter from "./routes/game.routes";
 import { getRandomChosungPair } from "./game/chosung";
 import { validateWord } from "./game/gameService";
-import type { Room, Player,PlayerSnapshot } from "./types";
-
-
+import type { Room, UsedWord, Player, PlayerSnapshot } from "./types";
 
 const app = express();
 
 //express cors
 app.use(
   cors({
-    origin: ["http://localhost:5173", "https://chosung-game.vercel.app", "https://chosung-game.onrender.com"],
-  methods: ["GET", "POST"],
-  credentials: true
-}),
+    origin: [
+      "http://localhost:5173",
+      "https://chosung-game.vercel.app",
+      "https://chosung-game.onrender.com",
+    ],
+    methods: ["GET", "POST"],
+    credentials: true,
+  }),
 );
 app.use(express.json());
 
@@ -29,24 +31,21 @@ app.use("/api", gameRouter);
 const distPath = path.join(process.cwd(), "..", "chosung-client", "dist");
 app.use(express.static(distPath));
 
-
 const httpServer = createServer(app);
-
-
 
 //socket cors
 const io = new Server(httpServer, {
   cors: {
     origin: [
-      "http://localhost:5173", 
-      "https://chosung-game.vercel.app", 
-      "https://chosung-game.onrender.com"
+      "http://localhost:5173",
+      "https://chosung-game.vercel.app",
+      "https://chosung-game.onrender.com",
     ],
     methods: ["GET", "POST"],
-    credentials: true
+    credentials: true,
   },
   allowEIO3: true,
-  transports: ["polling", "websocket"]
+  transports: ["polling", "websocket"],
 });
 
 app.get(/.*/, (req, res) => {
@@ -58,7 +57,6 @@ app.get(/.*/, (req, res) => {
     });
   }
 });
-
 
 /*==============================================================
         
@@ -79,7 +77,7 @@ const createRoom = (): { roomId: string; room: Room } => {
     status: "WAIT",
     players: new Map(),
     chosungPair: getRandomChosungPair(),
-    usedWords: new Set(),
+    usedWords: new Set<UsedWord>(),
     countdownTimer: undefined,
     gameTimer: undefined,
     endAt: undefined,
@@ -88,7 +86,6 @@ const createRoom = (): { roomId: string; room: Room } => {
   rooms.set(roomId, room);
   return { roomId, room };
 };
-
 
 /*===================================================================
         
@@ -117,10 +114,8 @@ const getRoomBySocket = (socketId: string) => {
 
 let tempNumber = 0;
 io.on("connection", (socket: Socket) => {
-  
   /* ---------- 방 참가 ---------- */
   socket.on("join-room", () => {
-
     const already = getRoomBySocket(socket.id);
     if (already) return;
 
@@ -144,30 +139,31 @@ io.on("connection", (socket: Socket) => {
       [roomId, room] = entry;
     }
 
-    
     // 4. 플레이어 추가
-  tempNumber++;
-  const tempNickname = `player${tempNumber}`;
+    tempNumber++;
+    const tempNickname = `player${tempNumber}`;
 
-  room.players.set(socket.id, {
+    room.players.set(socket.id, {
       socketId: socket.id,
       nickname: tempNickname,
       roomId, //지금구조에서 역추적 불가해서 여기 저장
-      score:0
+      score: 0,
     });
 
     socket.join(roomId);
 
-const playerSnapshot: PlayerSnapshot[] = Array.from(room.players.values()).map((player) => {
-  return {
-    socketId: player.socketId,
-    nickname: player.nickname,
-    score: player.score,
-  };
-});
+    const playerSnapshot: PlayerSnapshot[] = Array.from(
+      room.players.values(),
+    ).map((player) => {
+      return {
+        socketId: player.socketId,
+        nickname: player.nickname,
+        score: player.score,
+      };
+    });
 
-io.to(roomId).emit("room-updated",{players: playerSnapshot});
-socket.emit("set-my-id",{ you : socket.id , yourScore : 0 });
+    io.to(roomId).emit("room-updated", { players: playerSnapshot });
+    socket.emit("set-my-id", { you: socket.id, yourScore: 0 });
 
     // 5. 인원 다 차면 COUNTDOWN
     if (room.players.size === 2) {
@@ -180,14 +176,10 @@ socket.emit("set-my-id",{ you : socket.id , yourScore : 0 });
 
         room.chosungPair = getRandomChosungPair();
 
-
-        
-        
         /////// timer
 
         const durationMs = 60000;
         const endAt = Date.now() + durationMs;
-    
 
         io.to(roomId).emit("game-start", {
           chosungPair: room.chosungPair,
@@ -195,22 +187,21 @@ socket.emit("set-my-id",{ you : socket.id , yourScore : 0 });
         });
 
         room.gameTimer = setTimeout(() => {
-          
           if (room.status !== "PLAY") return;
 
           room.status = "END";
           room.gameTimer = undefined;
 
           /*--------게임종료-----------*/
-const finalScore = Array.from(room.players.values()).map(p => ({
-  nickname: p.nickname,
-  score: p.score,
-  socketId: p.socketId
-}));
+          const finalScore = Array.from(room.players.values()).map((p) => ({
+            nickname: p.nickname,
+            score: p.score,
+            socketId: p.socketId,
+          }));
 
           io.to(roomId).emit("game-end", {
             words: Array.from(room.usedWords),
-            scores : finalScore,
+            scores: finalScore,
           });
         }, durationMs);
       }, 5000);
@@ -220,34 +211,37 @@ const finalScore = Array.from(room.players.values()).map(p => ({
   /*---------초성 보내기---------------*/
 
   socket.on("submit-word", async ({ word }) => {
-
     const resultData = getRoomBySocket(socket.id);
-    if (!resultData || resultData.room.status !=="PLAY") return;
+    if (!resultData || resultData.room.status !== "PLAY") return;
 
     const { room, roomId } = resultData;
     const trimmed = word.trim();
-
 
     //2.validate
     const result = await validateWord({
       chosungPair: room.chosungPair,
       word,
-      usedWords: room.usedWords,
+      usedWords: new Set(Array.from(room.usedWords).map((uw) => uw.word)),
     });
 
     if (result.valid) {
-      room.usedWords.add(trimmed);
-  const player = room.players.get(socket.id);
-    if(player){
-      player.score += 10;
-    };
+      room.usedWords.add({
+        word: trimmed,
+        senderId: socket.id,
+        definitions: result.definitions || [],
+      });
+
+      const player = room.players.get(socket.id);
+      if (player) {
+        player.score += 10;
+      }
     }
 
     io.to(roomId).emit("word-validated", {
       word,
-      valid : result.valid,
-      reason : result.reason,
-      senderId : socket.id
+      valid: result.valid,
+      reason: result.reason,
+      senderId: socket.id,
     });
   });
 
@@ -269,7 +263,7 @@ const finalScore = Array.from(room.players.values()).map(p => ({
       clearTimeout(room.countdownTimer);
       room.countdownTimer = undefined;
       room.status = "WAIT";
-      io.to(roomId).emit("room-wait",{});
+      io.to(roomId).emit("room-wait", {});
     }
 
     // 방이 비었으면 삭제
@@ -277,11 +271,6 @@ const finalScore = Array.from(room.players.values()).map(p => ({
       rooms.delete(roomId);
     }
   });
-
-
-
-
-
 });
 const PORT = process.env.PORT || 3000;
 httpServer.listen(PORT, () => {

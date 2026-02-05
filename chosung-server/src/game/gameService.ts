@@ -22,16 +22,16 @@ export async function validateWord({
     };
   }
 
-if(trimmed.length !== 2) {
-  return {
-    valid:false,
-    reason: "두 단어만 입력하세요."
+  if (trimmed.length !== 2) {
+    return {
+      valid: false,
+      reason: "두 단어만 입력하세요.",
+    };
   }
-}
 
-if(!/^[가-힣]+$/.test(trimmed)){
-  return{valid:false, reason: "한글만 입력 가능합니다."}
-}
+  if (!/^[가-힣]+$/.test(trimmed)) {
+    return { valid: false, reason: "한글만 입력 가능합니다." };
+  }
 
   if (usedWords.has(trimmed)) {
     return {
@@ -52,14 +52,16 @@ if(!/^[가-힣]+$/.test(trimmed)){
 
   const dictResult = await checkWordDetail(trimmed);
   console.log("DICT RESULT RAW:", dictResult);
-  const { exist } = dictResult;
+  const { exist, definitions } = dictResult;
   console.log("exist:", exist);
+
   if (!exist) {
     return {
       valid: false,
       reason: "사전에 없는 단어입니다.",
+      definitions: [],
     };
   }
 
-  return { valid: true, word: trimmed };
+  return { valid: true, word: trimmed, definitions: definitions || [] };
 }
