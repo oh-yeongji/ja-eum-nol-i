@@ -34,6 +34,13 @@ const GameRoom = () => {
 
   const [finalData, setFinalData] = useState<GameEndData | null>(null);
 
+  const resetGameStatus = () => {
+    setState("WAIT");
+    setFinalData(null);
+    setMyWords([]);
+    setOpponentWords([]);
+  };
+
   // 게임 방 입장 할때
   useEffect(() => {
     if (!socket.connected) {
@@ -178,7 +185,12 @@ const GameRoom = () => {
       </div>
 
       {state === "END" && finalData && (
-        <ResultModal scores={finalData.scores} words={finalData.words} />
+        <ResultModal
+          socket={socket}
+          scores={finalData.scores}
+          words={finalData.words}
+          onReset={resetGameStatus}
+        />
       )}
 
       <div

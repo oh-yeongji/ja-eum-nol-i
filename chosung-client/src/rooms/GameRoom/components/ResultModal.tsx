@@ -1,3 +1,4 @@
+import { Socket } from "socket.io-client";
 import { GameEndData } from "@/types/domain/room";
 
 interface UsedWord {
@@ -7,11 +8,18 @@ interface UsedWord {
 }
 
 interface ResultModalProps {
+  socket: Socket | null;
   scores: GameEndData["scores"];
   words: UsedWord[];
+  onReset: () => void;
 }
 
-const ResultModal = ({ scores, words = [] }: ResultModalProps) => {
+const ResultModal = ({
+  socket,
+  scores,
+  words = [],
+  onReset,
+}: ResultModalProps) => {
   const sortedScores = [...scores].sort((a, b) => b.score - a.score);
   const winner = sortedScores[0];
   const loser = sortedScores[1];
@@ -20,6 +28,19 @@ const ResultModal = ({ scores, words = [] }: ResultModalProps) => {
 
   const winnerWords = words.filter((w) => w.senderId === winner?.socketId);
   const loserWords = words.filter((w) => w.senderId === loser?.socketId);
+
+  const handleRetry = () => {
+    if (!socket) return;
+
+    socket.emit("join-room");
+    onReset();
+    console.log("재입장 시도 (기존 연결 유지) ");
+  };
+
+  const handleExit = () => {
+    socket?.disconnect();
+    window.location.href = "/";
+  };
 
   return (
     <div
@@ -427,7 +448,7 @@ const ResultModal = ({ scores, words = [] }: ResultModalProps) => {
         }}
       >
         <button
-          onClick={() => window.location.reload()}
+          onClick={handleRetry}
           style={{
             padding: "10px 40px",
             fontSize: "18px",
@@ -446,7 +467,7 @@ const ResultModal = ({ scores, words = [] }: ResultModalProps) => {
           다시하기(R)
         </button>
         <button
-          onClick={() => window.history.back()}
+          onClick={handleExit}
           style={{
             padding: "10px 40px",
             fontSize: "18px",

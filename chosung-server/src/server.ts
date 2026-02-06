@@ -114,8 +114,10 @@ const getRoomBySocket = (socketId: string) => {
 
 let tempNumber = 0;
 io.on("connection", (socket: Socket) => {
+  console.log(`[CONNECT] 신규 접속: ${socket.id}`);
   /* ---------- 방 참가 ---------- */
   socket.on("join-room", () => {
+    console.log(`[JOIN-ROOM] 유저가 방 참가를 요청함: ${socket.id}`);
     const already = getRoomBySocket(socket.id);
     if (already) return;
 
@@ -178,7 +180,7 @@ io.on("connection", (socket: Socket) => {
 
         /////// timer
 
-        const durationMs = 60000;
+        const durationMs = 10000;
         const endAt = Date.now() + durationMs;
 
         io.to(roomId).emit("game-start", {
@@ -251,7 +253,9 @@ io.on("connection", (socket: Socket) => {
 
 =======================================================*/
 
-  socket.on("disconnect", () => {
+  socket.on("disconnect", (reason) => {
+    console.log(`[EXIT] 유저 퇴장함: ${socket.id}, 사유: ${reason}`);
+
     const resultData = getRoomBySocket(socket.id);
     if (!resultData) return;
 
@@ -264,6 +268,14 @@ io.on("connection", (socket: Socket) => {
       room.countdownTimer = undefined;
       room.status = "WAIT";
       io.to(roomId).emit("room-wait", {});
+    }
+
+    if (room.status === "PLAY") {
+      if (room.gameTimer) clearTimeout(room.gameTimer);
+      room.status = "END";
+      io.to(roomId).emit("opponent-left", {
+        message: "상대방이 나가서 게임이 종료되었습니다.",
+      });
     }
 
     // 방이 비었으면 삭제
