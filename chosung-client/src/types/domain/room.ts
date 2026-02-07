@@ -12,5 +12,6 @@ export interface GameEndData {
     socketId: string;
     nickname: string;
     score: number;
+    isLeaver?: boolean;
   }[];
 }

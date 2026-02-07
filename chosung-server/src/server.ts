@@ -9,6 +9,7 @@ import gameRouter from "./routes/game.routes";
 import { getRandomChosungPair } from "./game/chosung";
 import { validateWord } from "./game/gameService";
 import type { Room, UsedWord, Player, PlayerSnapshot } from "./types";
+import { clear } from "console";
 
 const app = express();
 
@@ -180,7 +181,7 @@ io.on("connection", (socket: Socket) => {
 
         /////// timer
 
-        const durationMs = 10000;
+        const durationMs = 30000;
         const endAt = Date.now() + durationMs;
 
         io.to(roomId).emit("game-start", {
@@ -193,18 +194,6 @@ io.on("connection", (socket: Socket) => {
 
           room.status = "END";
           room.gameTimer = undefined;
-
-          /*--------게임종료-----------*/
-          const finalScore = Array.from(room.players.values()).map((p) => ({
-            nickname: p.nickname,
-            score: p.score,
-            socketId: p.socketId,
-          }));
-
-          io.to(roomId).emit("game-end", {
-            words: Array.from(room.usedWords),
-            scores: finalScore,
-          });
         }, durationMs);
       }, 5000);
     }
@@ -260,28 +249,41 @@ io.on("connection", (socket: Socket) => {
     if (!resultData) return;
 
     const { roomId, room } = resultData;
-    room.players.delete(socket.id);
+    const leaverId = socket.id;
 
     //카툰트다운중 이탈 -> 취소
     if (room.status === "COUNTDOWN" && room.countdownTimer) {
       clearTimeout(room.countdownTimer);
       room.countdownTimer = undefined;
       room.status = "WAIT";
+      room.players.delete(leaverId);
       io.to(roomId).emit("room-wait", {});
-    }
-
-    if (room.status === "PLAY") {
+    } else if (room.status === "PLAY") {
+      /*--------게임중 이탈 -----------*/
       if (room.gameTimer) clearTimeout(room.gameTimer);
       room.status = "END";
-      io.to(roomId).emit("opponent-left", {
-        message: "상대방이 나가서 게임이 종료되었습니다.",
-      });
-    }
 
-    // 방이 비었으면 삭제
-    if (room.players.size === 0) {
-      rooms.delete(roomId);
+      const finalScore = Array.from(room.players.values()).map((p) => {
+        const isLeaver = p.socketId === leaverId;
+        return {
+          nickname: isLeaver ? `${p.nickname} (기권)` : p.nickname,
+          score: p.score,
+          socketId: p.socketId,
+          isLeaver: isLeaver,
+        };
+      });
+
+      io.to(roomId).emit("game-end", {
+        words: Array.from(room.usedWords),
+        scores: finalScore,
+      });
+
+      room.players.delete(leaverId);
+    } else {
+      room.players.delete(leaverId);
     }
+    // 방이 비었으면 삭제
+    if (room.players.size === 0) rooms.delete(roomId);
   });
 });
 const PORT = process.env.PORT || 3000;

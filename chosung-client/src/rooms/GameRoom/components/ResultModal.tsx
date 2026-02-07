@@ -20,14 +20,32 @@ const ResultModal = ({
   words = [],
   onReset,
 }: ResultModalProps) => {
-  const sortedScores = [...scores].sort((a, b) => b.score - a.score);
+  const sortedScores = [...scores].sort((a, b) => {
+    if (a.isLeaver !== b.isLeaver) {
+      return a.isLeaver ? 1 : -1;
+    }
+
+    return b.score - a.score;
+  });
   const winner = sortedScores[0];
-  const loser = sortedScores[1];
+  const loser = sortedScores[1] || null;
 
-  const isDraw = winner && loser && winner.score === loser.score;
+  const isDraw =
+    winner &&
+    loser &&
+    !winner.isLeaver &&
+    !loser.isLeaver &&
+    winner.score === loser.score;
 
-  const winnerWords = words.filter((w) => w.senderId === winner?.socketId);
-  const loserWords = words.filter((w) => w.senderId === loser?.socketId);
+  const winnerWords = winner
+    ? words.filter((w) => w.senderId === winner.socketId)
+    : [];
+  const loserWords = loser
+    ? words.filter((w) => w.senderId === loser?.socketId)
+    : [];
+
+  const cleanWinnerName = winner?.nickname.replace("(이탈)", "");
+  const cleanLoserName = loser?.nickname.replace("(이탈)", "");
 
   const handleRetry = () => {
     if (!socket) return;
@@ -67,24 +85,35 @@ const ResultModal = ({
         padding: "15px",
       }}
     >
-      {/* 타이틀바 */}
       <div
         style={{
-          background: isDraw ? "#000000" : "#000080",
-          color: isDraw ? "#FFD700" : "#ffffff",
+          background: loser?.isLeaver
+            ? "#008080"
+            : isDraw
+              ? "#000000"
+              : "#000080",
+          color: "#ffffff",
           padding: "5px 10px",
           marginBottom: "15px",
           fontFamily: "'Galmuri9', sans-serif",
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          borderBottom: isDraw ? "1px solid #FFD700" : "none",
+
+          borderBottom: loser?.isLeaver ? "2px solid #FFD700" : "none",
         }}
       >
-        <span>
-          {isDraw
-            ? "⚠SYSTEM_ERROR: 패자를 찾지 못했습니다!"
-            : "Game_Result.exe"}
+        <span
+          style={{
+            color: loser?.isLeaver ? "#FFD700" : "#ffffff",
+            fontWeight: "bold",
+          }}
+        >
+          {loser?.isLeaver
+            ? "🏆 [FORFEIT_WIN]: 축하합니다! 당신의 끈기 있는 플레이로 승리를 쟁취했습니다!"
+            : isDraw
+              ? "⚠ SYSTEM_ERROR: 패자를 찾지 못했습니다!"
+              : "Game_Result.exe"}
         </span>
         <div style={{ display: "flex", gap: "2px" }}>
           <div
@@ -120,7 +149,6 @@ const ResultModal = ({
         </div>
       </div>
 
-      {/* 점수 란 */}
       <div
         style={{
           display: "flex",
@@ -134,7 +162,6 @@ const ResultModal = ({
           flexShrink: 0,
         }}
       >
-        {/* 승자 패널 */}
         <div
           style={{
             background: "#C0C0C0",
@@ -186,6 +213,7 @@ const ResultModal = ({
                 fontWeight: "bold",
                 color: "#ff0000",
                 marginTop: "5px",
+                fontFamily: "'Galmuri9', sans-serif",
               }}
             >
               {winner?.score} PTS
@@ -193,13 +221,13 @@ const ResultModal = ({
           </ul>
         </div>
 
-        {/* 패자 패널 */}
         {loser && (
           <div
             style={{
               background: "#C0C0C0",
               width: "45%",
               padding: "2px",
+              opacity: loser.isLeaver ? 0.7 : 1,
               borderTop: "2px solid #808080",
               borderLeft: "2px solid #808080",
               borderRight: "2px solid #ffffff",
@@ -220,7 +248,10 @@ const ResultModal = ({
                 justifyContent: "space-between",
               }}
             >
-              <span>{isDraw ? "Co-Winner.exe" : "Loser.log"}</span>
+              <span>
+                {isDraw ? "Co-Winner.exe" : "Loser.log"}
+                {loser.isLeaver && "🚩"}
+              </span>
               <span>{isDraw ? "🏆" : "🥈"}</span>
             </div>
             <ul
@@ -229,7 +260,7 @@ const ResultModal = ({
                 padding: "20px",
                 margin: 0,
                 textAlign: "center",
-                background: "#fff",
+                background: loser.isLeaver ? "#e0e0e0" : "#fff",
               }}
             >
               <li
@@ -240,13 +271,17 @@ const ResultModal = ({
                 }}
               >
                 {loser.nickname}
+                {loser.isLeaver}
               </li>
               <li
                 style={{
                   fontSize: isDraw ? "22px" : "20px",
-                  color: isDraw ? "#ff0000" : "#808080",
                   marginTop: "5px",
-                  fontWeight: isDraw ? "bold" : "normal",
+                  padding: loser.isLeaver ? "2px 10px" : "0",
+                  background: loser.isLeaver ? "#404040" : "transparent",
+                  color: loser.isLeaver ? "#808080" : "#808080",
+                  textDecoration: loser.isLeaver ? "line-through" : "none",
+                  fontFamily: "'Galmuri9', sans-serif",
                 }}
               >
                 {loser.score} PTS
@@ -256,12 +291,10 @@ const ResultModal = ({
         )}
       </div>
 
-      {/* 2. 단어장 칸 */}
       <div
         className="meansPanel"
         style={{ display: "flex", flex: 1, minHeight: 0 }}
       >
-        {/* 승자단어장 */}
         <div
           style={{
             flex: 1,
@@ -282,7 +315,7 @@ const ResultModal = ({
               fontFamily: "'Galmuri9', sans-serif",
             }}
           >
-            {winner?.nickname} 단어장
+            {cleanWinnerName} 단어장
           </h3>
           <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
             {winnerWords.length > 0 ? (
@@ -348,14 +381,13 @@ const ResultModal = ({
           </ul>
         </div>
 
-        {/* 패자 단어장 */}
         <div
           style={{
             flex: 1,
             overflowY: "auto",
             margin: "25px 10px",
             padding: "15px",
-            background: "#f9fafb",
+            background: loser?.isLeaver ? "#ececec" : "#f9fafb",
             border: "2px solid #808080",
             borderRightColor: "#fff",
             borderBottomColor: "#fff",
@@ -369,7 +401,7 @@ const ResultModal = ({
               fontFamily: "'Galmuri9', sans-serif",
             }}
           >
-            {loser?.nickname} 단어장
+            {cleanLoserName} 단어장 {loser?.isLeaver}
           </h3>
           <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
             {loserWords.length > 0 ? (
@@ -378,6 +410,7 @@ const ResultModal = ({
                   key={idx}
                   style={{
                     marginBottom: "10px",
+                    opacity: loser?.isLeaver ? 0.6 : 1,
                     background: "#fff",
                     borderTop: "2px solid #dfdfdf",
                     borderLeft: "2px solid #dfdfdf",
@@ -436,7 +469,6 @@ const ResultModal = ({
         </div>
       </div>
 
-      {/* 3. 버튼 칸 */}
       <div
         style={{
           display: "flex",
