@@ -9,7 +9,6 @@ import gameRouter from "./routes/game.routes";
 import { getRandomChosungPair } from "./game/chosung";
 import { validateWord } from "./game/gameService";
 import type { Room, UsedWord, Player, PlayerSnapshot } from "./types";
-import { clear } from "console";
 
 const app = express();
 
@@ -181,7 +180,7 @@ io.on("connection", (socket: Socket) => {
 
         /////// timer
 
-        const durationMs = 30000;
+        const durationMs = 60000;
         const endAt = Date.now() + durationMs;
 
         io.to(roomId).emit("game-start", {
@@ -194,6 +193,18 @@ io.on("connection", (socket: Socket) => {
 
           room.status = "END";
           room.gameTimer = undefined;
+
+          const finalScore = Array.from(room.players.values()).map((p) => ({
+            nickname: p.nickname,
+            score: p.score,
+            socketId: p.socketId,
+            isLeaver: false,
+          }));
+
+          io.to(roomId).emit("game-end", {
+            words: Array.from(room.usedWords),
+            scores: finalScore,
+          });
         }, durationMs);
       }, 5000);
     }

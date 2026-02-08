@@ -138,6 +138,8 @@ const GameRoom = () => {
     const onGameEnd = (data: GameEndData) => {
       console.log("게임종료 데이터 수신:", data);
 
+      if (!data || !data.scores) return;
+
       const myData = data.scores.find((p) => p.socketId === roomData.myId);
       const opData = data.scores.find((p) => p.socketId !== roomData.myId);
 
@@ -154,14 +156,7 @@ const GameRoom = () => {
     return () => {
       socket.off("game-end", onGameEnd);
     };
-  }, [roomData.myId]);
-  console.log("렌더링 체크", "상태:", state, "데이터 존재 여부:", !!finalData);
-
-  <div>
-    <p>현재 상태: {state}</p>
-    <p>내 닉네임: {me?.nickname}</p>
-    <p>플레이어 리스트 수: {roomData.players.length}</p>
-  </div>;
+  }, []);
 
   return (
     <>
