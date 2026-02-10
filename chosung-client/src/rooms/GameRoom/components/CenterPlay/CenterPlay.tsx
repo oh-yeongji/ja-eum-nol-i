@@ -67,10 +67,6 @@ const CenterPlay = ({
           <div className={styles.secondCho}>{chosungPair[1]}</div>
         </div>
 
-        <div className={styles.playerStatusBtn}>
-          <b> READY </b>
-        </div>
-
         {alert && <div className={styles.chosungAlert}>{alert}</div>}
         <div className={styles.inputContainer}>
           <div className={styles.inputGroup}>
