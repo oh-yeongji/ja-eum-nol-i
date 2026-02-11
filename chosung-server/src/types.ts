@@ -3,8 +3,9 @@ export interface Room {
   players: Map<string, Player>;
   chosungPair: [string, string];
   usedWords: Set<UsedWord>;
-  countdownTimer?: NodeJS.Timeout | undefined;
-  gameTimer?: NodeJS.Timeout | undefined;
+  startTimer?: NodeJS.Timeout | undefined;
+  gameDurationTimer?: NodeJS.Timeout | undefined;
+  timeLimit: number;
   endAt?: number;
 }
 
@@ -18,11 +19,15 @@ export interface Player {
   socketId: string;
   nickname: string;
   roomId: string;
+  isOwner: boolean;
+  isReady: boolean;
   score: number;
 }
 
 export type PlayerSnapshot = {
   socketId: string;
   nickname: string;
+  isOwner: boolean;
+  isReady: boolean;
   score: number;
 };

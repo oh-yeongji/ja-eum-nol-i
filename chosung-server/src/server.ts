@@ -78,8 +78,9 @@ const createRoom = (): { roomId: string; room: Room } => {
     players: new Map(),
     chosungPair: getRandomChosungPair(),
     usedWords: new Set<UsedWord>(),
-    countdownTimer: undefined,
-    gameTimer: undefined,
+    startTimer: undefined,
+    gameDurationTimer: undefined,
+    timeLimit: 60,
     endAt: undefined,
   };
 
@@ -102,6 +103,55 @@ const getRoomBySocket = (socketId: string) => {
   return null;
 };
 
+/*===================================================================
+        
+   게임시작하는 함수
+
+====================================================================*/
+
+const startGame = (roomId: string, room: Room) => {
+  if (room.status === "PLAY") return;
+  room.status = "PLAY";
+  room.startTimer = undefined;
+
+  room.chosungPair = getRandomChosungPair();
+
+  room.usedWords = new Set();
+
+  const limit = room.timeLimit || 60;
+  const durationMs = limit * 1000;
+  const endAt = Date.now() + durationMs;
+
+  io.to(roomId).emit("game-start", {
+    chosungPair: room.chosungPair,
+
+    endAt,
+  });
+
+  room.gameDurationTimer = setTimeout(() => {
+    if (room.status !== "PLAY") return;
+
+    room.status = "END";
+
+    room.gameDurationTimer = undefined;
+
+    const finalScore = Array.from(room.players.values()).map((p) => ({
+      nickname: p.nickname,
+
+      score: p.score,
+
+      socketId: p.socketId,
+
+      isLeaver: false,
+    }));
+
+    io.to(roomId).emit("game-end", {
+      words: Array.from(room.usedWords),
+
+      scores: finalScore,
+    });
+  }, durationMs);
+};
 /* =============================================================================
    
 
@@ -144,11 +194,14 @@ io.on("connection", (socket: Socket) => {
     // 4. 플레이어 추가
     tempNumber++;
     const tempNickname = `player${tempNumber}`;
+    const firstPlayer = room.players.size === 0;
 
     room.players.set(socket.id, {
       socketId: socket.id,
       nickname: tempNickname,
       roomId, //지금구조에서 역추적 불가해서 여기 저장
+      isOwner: firstPlayer,
+      isReady: false,
       score: 0,
     });
 
@@ -160,59 +213,89 @@ io.on("connection", (socket: Socket) => {
       return {
         socketId: player.socketId,
         nickname: player.nickname,
+        isOwner: player.isOwner,
+        isReady: player.isReady,
         score: player.score,
       };
     });
 
-    io.to(roomId).emit("room-updated", { players: playerSnapshot });
+    io.to(roomId).emit("room-updated", {
+      players: playerSnapshot,
+      status: room.status,
+    });
     socket.emit("set-my-id", { you: socket.id, yourScore: 0 });
+  });
 
-    // 5. 인원 다 차면 COUNTDOWN
-    if (room.players.size === 2) {
-      room.status = "COUNTDOWN";
-      io.to(roomId).emit("countdown-start", { seconds: 5 });
+  /*---------WaitingRoom 시간 설정 변경---------------*/
+  socket.on("change-setting", ({ timeLimit }) => {
+    const resultData = getRoomBySocket(socket.id);
+    if (!resultData) return;
+    const { room, roomId } = resultData;
 
-      room.countdownTimer = setTimeout(() => {
-        room.status = "PLAY";
-        room.countdownTimer = undefined;
+    if (room.players.get(socket.id)?.isOwner) {
+      room.timeLimit = timeLimit;
+      io.to(roomId).emit("settings-updated", { timeLimit });
+    }
+  });
 
-        room.chosungPair = getRandomChosungPair();
+  /*---------WaitingRoom 준비/시작 버튼---------------*/
 
-        /////// timer
+  socket.on("toggle-ready", () => {
+    const resultData = getRoomBySocket(socket.id);
+    if (!resultData) return;
 
-        const durationMs = 60000;
-        const endAt = Date.now() + durationMs;
+    const { roomId, room } = resultData;
+    const player = room.players.get(socket.id);
+    if (!player) return;
 
-        io.to(roomId).emit("game-start", {
-          chosungPair: room.chosungPair,
-          endAt,
-        });
+    player.isReady = !player.isReady;
 
-        room.gameTimer = setTimeout(() => {
-          if (room.status !== "PLAY") return;
+    const playerSnapshot: PlayerSnapshot[] = Array.from(
+      room.players.values(),
+    ).map((p) => ({
+      socketId: p.socketId,
+      nickname: p.nickname,
+      isOwner: p.isOwner,
+      isReady: p.isReady,
+      score: p.score,
+    }));
 
-          room.status = "END";
-          room.gameTimer = undefined;
+    io.to(roomId).emit("room-updated", { players: playerSnapshot });
 
-          const finalScore = Array.from(room.players.values()).map((p) => ({
-            nickname: p.nickname,
-            score: p.score,
-            socketId: p.socketId,
-            isLeaver: false,
-          }));
+    const players = Array.from(room.players.values());
+    if (players.length < 2) return;
 
-          io.to(roomId).emit("game-end", {
-            words: Array.from(room.usedWords),
-            scores: finalScore,
-          });
-        }, durationMs);
-      }, 5000);
+    const owner = players.find((p) => p.isOwner);
+    const user = players.find((p) => !p.isOwner);
+
+    if (owner?.isReady && user?.isReady) {
+      if (room.startTimer) {
+        clearTimeout(room.startTimer);
+        room.startTimer = undefined;
+      }
+      startGame(roomId, room);
+    } else if (owner?.isReady && !user?.isReady) {
+      if (!room.startTimer) {
+        room.status = "COUNTDOWN";
+        io.to(roomId).emit("countdown-start", { seconds: 5 });
+        room.startTimer = setTimeout(() => {
+          startGame(roomId, room);
+        }, 5000);
+      }
+    } else if (!owner?.isReady && room.startTimer) {
+      clearTimeout(room.startTimer);
+      room.startTimer = undefined;
+      room.status = "WAIT";
+      io.to(roomId).emit("room-wait", {
+        message: "방장이 준비를 취소했습니다.",
+      });
     }
   });
 
   /*---------초성 보내기---------------*/
 
-  socket.on("submit-word", async ({ word }) => {
+  socket.on("submit-word", async (data: { word: string }) => {
+    const word = data.word;
     const resultData = getRoomBySocket(socket.id);
     if (!resultData || resultData.room.status !== "PLAY") return;
 
@@ -222,7 +305,7 @@ io.on("connection", (socket: Socket) => {
     //2.validate
     const result = await validateWord({
       chosungPair: room.chosungPair,
-      word,
+      word: trimmed,
       usedWords: new Set(Array.from(room.usedWords).map((uw) => uw.word)),
     });
 
@@ -263,15 +346,15 @@ io.on("connection", (socket: Socket) => {
     const leaverId = socket.id;
 
     //카툰트다운중 이탈 -> 취소
-    if (room.status === "COUNTDOWN" && room.countdownTimer) {
-      clearTimeout(room.countdownTimer);
-      room.countdownTimer = undefined;
+    if (room.status === "COUNTDOWN" && room.startTimer) {
+      clearTimeout(room.startTimer);
+      room.startTimer = undefined;
       room.status = "WAIT";
       room.players.delete(leaverId);
       io.to(roomId).emit("room-wait", {});
     } else if (room.status === "PLAY") {
       /*--------게임중 이탈 -----------*/
-      if (room.gameTimer) clearTimeout(room.gameTimer);
+      if (room.gameDurationTimer) clearTimeout(room.gameDurationTimer);
       room.status = "END";
 
       const finalScore = Array.from(room.players.values()).map((p) => {
