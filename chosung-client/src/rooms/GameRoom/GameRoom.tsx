@@ -4,13 +4,19 @@ import styles from "./GameRoom.module.css";
 import PlayerPanel from "./components/PlayerPanel/PlayerPanel";
 import CenterPlay from "./components/CenterPlay/CenterPlay";
 import ResultModal from "./components/ResultModal";
+import CommonHeader from "./components/CommonHeader/CommonHeader";
+
 import type {
   RoomStatus,
   PlayerSnapshot,
   GameEndData,
 } from "@/types/domain/room";
 
-const GameRoom = () => {
+interface GameRoomProps {
+  timeLimit: number;
+}
+
+const GameRoom = ({ timeLimit }: GameRoomProps) => {
   const [roomData, setRoomData] = useState<{
     players: PlayerSnapshot[];
     myId: string;
@@ -136,8 +142,6 @@ const GameRoom = () => {
 
   useEffect(() => {
     const onGameEnd = (data: GameEndData) => {
-      console.log("게임종료 데이터 수신:", data);
-
       if (!data || !data.scores) return;
 
       const myData = data.scores.find((p) => p.socketId === roomData.myId);
@@ -162,23 +166,6 @@ const GameRoom = () => {
     <>
       <div className={styles["out-of-stage"]} />
 
-      <div
-        style={{
-          position: "absolute",
-          top: 0,
-          width: "100%",
-          height: "75px",
-          background: "#fff",
-          opacity: "0.5",
-          fontSize: "20px",
-          zIndex: 9999,
-        }}
-      >
-        레디 버튼은 두명이 입장했을때 활성화 됩니다.한명이 레디버튼을 누르면
-        다른 사람이 누르지않아도 10초 뒤 바로 시작됩니다. 두명이 레디를 누르면
-        바로 게임이 시작합니다.
-      </div>
-
       {state === "END" && finalData && (
         <ResultModal
           socket={socket}
@@ -188,32 +175,18 @@ const GameRoom = () => {
         />
       )}
 
-      <div
-        className="stage"
-        style={{
-          width: "1200px",
-          height: "700px",
-          display: "flex",
-          position: "absolute",
-          top: "55%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
-          justifyContent: "space-between",
-          background: "#fff",
-          overflow: "hidden",
-          zIndex: "9",
-          border: "1px solid #C0C0C0",
-        }}
-      >
-        <div className={styles.header}>
-          <span
-            className={styles.titleName}
-            style={{ fontWeight: "bold", marginLeft: "4px" }}
-          >
-            초성 게임
-          </span>
-          <button className={styles.closeBtn}>X</button>
-        </div>
+      <div className={styles.stage}>
+        <CommonHeader
+          style={{
+            position: "absolute",
+            fontFamily: "'Batang', '바탕', serif",
+            fontSize: "14px",
+            fontWeight: "bold",
+            WebkitFontSmoothing: "none",
+            letterSpacing: "-0.5px",
+          }}
+          title="자음 놀이 (놀이마당)"
+        />
         <PlayerPanel
           key="left-me"
           nickname={me?.nickname ?? "대기중"}

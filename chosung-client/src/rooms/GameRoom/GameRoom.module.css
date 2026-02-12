@@ -5,59 +5,21 @@
   z-index: 1;
 }
 
-.header {
+.stage {
+  width: 1200px;
+  height: 700px;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 30px;
-  padding: 0 10px;
-  background: #000080;
-  color: #fff;
-  font-size: 12px;
-  box-sizing: border-box;
-  z-index: 10;
-}
-.titleName {
-  /* font-family: "Gulim", "굴림", "AppleGothic", sans-serif; */
-  font-size: 16px;
-  color: #fff;
-  -webkit-font-smoothing: none;
-  text-rendering: optimizeSpeed;
-  letter-spacing: -0.8px;
-  font-family: "Batang", "바탕", serif;
-  -webkit-font-smoothing: none;
-}
-.closeBtn {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 20px;
-  height: 18px;
-  background: #c0c0c0;
-  color: #000;
-  font-family: "MS Sans Serif", sans-serif;
-  font-weight: bold;
-  border: 2px solid;
-  border-color: #ffffff #808080 #808080 #ffffff;
-  cursor: pointer;
-
-  font-family: "Galmuri9", sans-serif;
-  font-weight: bold;
-  font-size: 12px;
-
-  border: 2px solid;
-  border-color: #ffffff #808080 #808080 #ffffff;
-  cursor: pointer;
-  padding-bottom: 2px;
-}
-
-.closeBtn:active {
-  border-color: #808080 #ffffff #ffffff #808080;
-  padding-top: 1px;
-  padding-left: 1px;
-  padding-bottom: 0px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  justify-content: space-between;
+  background: #fff;
+  overflow: hidden;
+  z-index: 9;
+  border-top: 2px solid #ffffff;
+  border-left: 2px solid #ffffff;
+  border-right: 2px solid #808080;
+  border-bottom: 2px solid #808080;
+  padding-top: 30px;
 }

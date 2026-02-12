@@ -105,7 +105,17 @@ const WaitingRoom = () => {
         </div>
       )}
       <div className={styles.wrapper}>
-        <CommonHeader title="초성게임" />
+        <CommonHeader
+          style={{
+            position: "absolute",
+            fontFamily: "'Batang', '바탕', serif",
+            fontSize: "14px",
+            fontWeight: "bold",
+            WebkitFontSmoothing: "none",
+            letterSpacing: "-0.5px",
+          }}
+          title="자음놀이 (대기방)"
+        />
         <div className={styles.stage}>
           <div className={styles.LobbySidePanel}>
             <div className={styles.settingWrapper}>
