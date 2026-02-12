@@ -19,7 +19,11 @@ const CHOSUNG_LIST = [
 ];
 
 const BLACKLIST = new Set([
+  "ㄹㄱ",
+  "ㄹㄴ",
   "ㄹㄷ",
+  "ㄹㅇ",
+  "ㄹㅈ",
   "ㄹㅋ",
   "ㄹㅌ",
   "ㄹㅍ",
@@ -36,16 +40,20 @@ const BLACKLIST = new Set([
   "ㅎㅋ",
   "ㅁㅌ",
   "ㅂㅌ",
+  "ㅂㅍ",
   "ㅈㅌ",
   "ㅎㅌ",
   "ㅇㅍ",
   "ㅎㅍ",
+  "ㅊㅋ",
   "ㅊㅍ",
   "ㅁㅍ",
   "ㄴㅎ",
   "ㄹㅎ",
   "ㅁㅎ",
   "ㅂㅎ",
+  "ㅍㄹ",
+  "ㅍㅋ",
 ]);
 export function getRandomChosungPair(): [string, string] {
   let first: string;
