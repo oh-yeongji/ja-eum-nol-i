@@ -1,54 +1,171 @@
 html,
-body,
-#root {
+body {
   margin: 0;
+  padding: 0;
   width: 100%;
   height: 100%;
   overflow: hidden;
+  box-sizing: border-box;
 }
 
-.background-image {
+.desktop-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
   position: fixed;
-  inset: 0;
-  max-width: 1920px;
-  background: url("/images/closedDoor_pic(1).jpg") center / cover no-repeat;
+  top: 0;
+  left: 0;
+  background: #008080 radial-gradient(#000000 1px, transparent 0);
+  background-size: 3px 3px;
+  overflow: hidden;
+}
+
+.main-window {
+  display: flex;
+  flex-direction: column;
+  height: auto;
+  width: 520px;
+  background-color: #c0c0c0;
+  padding: 2px;
+  border-top: 2px solid #dfdfdf;
+  border-left: 2px solid #dfdfdf;
+  border-right: 2px solid #404040;
+  border-bottom: 2px solid #404040;
+  box-shadow: 3px 3px 0px rgba(0, 0, 0, 0.5);
+  z-index: 10;
+}
+
+.window-content {
+  margin: 4px;
+  padding: 25px 20px;
+  border-top: 2px solid #808080;
+  border-left: 2px solid #808080;
+  border-right: 2px solid #ffffff;
+  border-bottom: 2px solid #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: #c0c0c0;
+}
+
+.title1 {
+  color: #000080;
+  font-size: 20px;
+  margin: 0;
+  letter-spacing: 4px;
+  font-family: Galmuri9, serif;
+}
+.app-identity {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 10px;
+  margin-bottom: 20px;
+}
+
+.title2 {
+  font-family: "Batang", "바탕", serif;
+  font-size: 4rem;
+  font-weight: 900;
+  margin: 5px 0 20px 0;
+  line-height: 1;
+  margin: 0;
+}
+.versionName {
+  font-size: 12px;
+  font-family: Galmuri9;
+  color: #555;
+  margin-left: 5px;
 }
 
 .enterRoom {
-  width: 400px;
-  height: 100px;
-  position: fixed;
-  left: 50%;
-  bottom: 80px;
-  border-radius: 15px;
-  transform: translateX(-50%);
-  background: #1f3a5f;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 280px;
+  height: 60px;
+  background-color: #000080;
   color: #ffffff;
-
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
-  border: none;
-
-  line-height: 100px;
-  z-index: 9;
-  border: 1px;
+  font-family: "Galmuri9", sans-serif;
+  font-size: 1.4rem;
+  font-weight: bold;
+  letter-spacing: 4px;
+  text-indent: 4px;
+  cursor: pointer;
+  border-top: 3px solid #ffffff;
+  border-left: 3px solid #ffffff;
+  border-right: 3px solid #000000;
+  border-bottom: 3px solid #000000;
+  outline: none;
+  margin-top: 10px;
 }
 
-/* 닉네임 입력창 */
-input[type="text"] {
-  margin-top: 30px;
-  margin-left: 50px;
-  width: 150px;
-  height: 30px;
-  font-size: 20px;
-  border: 0;
-  background: #fff;
+.enterRoom:active {
+  border-top: 3px solid #000000;
+  border-left: 3px solid #000000;
+  border-right: 3px solid #ffffff;
+  border-bottom: 3px solid #ffffff;
+  transform: translate(2px, 2px);
 }
-.submitBtn {
-  margin-top: 30px;
-  margin-left: 10px;
-  width: 50px;
-  height: 30px;
-  font-size: 20px;
-  /* line-height: 30px; */
-  background: #fff;
+
+.taskbar {
+  display: flex;
+  justify-content: space-between;
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  height: 32px;
+  background-color: #c0c0c0;
+  border-top: 2px solid #ffffff;
+  display: flex;
+  align-items: center;
+  padding: 2px 10px;
+  z-index: 1000;
+}
+
+.systemStartBtn {
+  background-color: #c0c0c0;
+  font-family: "Gulim", "굴림", "Dotum", "돋움", sans-serif;
+  font-size: 14px;
+  font-weight: 900;
+  height: 100%;
+  padding: 0 10px;
+  border-top: 2px solid #ffffff;
+  border-left: 2px solid #ffffff;
+  border-right: 2px solid #404040;
+  border-bottom: 2px solid #404040;
+  cursor: pointer;
+}
+
+.systemStartBtn:active {
+  border-top: 2px solid #404040;
+  border-left: 2px solid #404040;
+  border-right: 2px solid #ffffff;
+  border-bottom: 2px solid #ffffff;
+  padding: 2px 0 0 2px;
+}
+.taskbar-popup {
+  width: 200px;
+  height: 32px;
+  background: #000;
+}
+.system-tray {
+  margin-right: 5px;
+  font-family: "Gulim", "굴림", "Dotum", "돋움", sans-serif;
+  padding: 2px 8px;
+  border-top: 2px solid #808080;
+  border-left: 2px solid #808080;
+  border-right: 2px solid #ffffff;
+  border-bottom: 2px solid #ffffff;
+  box-shadow: inset 1px 1px 0px 0px #000000;
+}
+.game-room-wrapper {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow-y: auto;
 }

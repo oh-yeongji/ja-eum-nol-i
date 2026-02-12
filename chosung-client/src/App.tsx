@@ -3,13 +3,35 @@ import { socket } from "@/socket/socket";
 import GameRoom from "./rooms/GameRoom/GameRoom";
 import GuideModal from "./rooms/GameRoom/components/GuideModal";
 import type { RoomStatus } from "types/domain/room";
+import "./index.css";
+import WaitingRoom from "./rooms/GameRoom/components/WaitingRoom/WaitingRoom";
+import CommonHeader from "./rooms/GameRoom/components/CommonHeader/CommonHeader";
 
 const App = () => {
   const [showGuide, setShowGuide] = useState(false);
   const [connected, setConnected] = useState(false);
   const [status, setStatus] = useState<RoomStatus>("WAIT");
   const [entered, setEntered] = useState(false);
+  const [currentTime, setCurrentTime] = useState("");
+
   const hasJoinedRef = useRef(false);
+
+  useEffect(() => {
+    const currentClock = () => {
+      const now = new Date();
+      setCurrentTime(
+        now.toLocaleTimeString("ko-KR", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
+        }),
+      );
+    };
+    currentClock();
+    const timer = setInterval(currentClock, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
   const handleEnterClick = () => {
     const skip = localStorage.getItem("skipGuide") === "true";
     if (skip) {
@@ -21,31 +43,17 @@ const App = () => {
 
   const enterGameRoom = (skipChecked?: boolean) => {
     if (skipChecked) localStorage.setItem("skipGuide", "true");
-
     if (!entered) {
       setEntered(true);
       setShowGuide(false);
     }
   };
 
-
-
   useEffect(() => {
     socket.connect();
-
-    socket.on("connect", () => {
-      console.log("연결:",socket.id);
-      
-      setConnected(true);
-    });
-
-    socket.on("disconnect", () => {
-      setConnected(false);
-    });
-
-    socket.on("room-wait", () => {
-      setStatus("WAIT");
-    });
+    socket.on("connect", () => setConnected(true));
+    socket.on("disconnect", () => setConnected(false));
+    socket.on("room-wait", () => setStatus("WAIT"));
 
     return () => {
       socket.off("connect");
@@ -54,46 +62,53 @@ const App = () => {
     };
   }, []);
 
-
-useEffect(()=>{
-  if(!connected || !entered) return;
-  if (hasJoinedRef.current) return;
-  console.log("join-room emit");
-  
-  socket.emit("join-room",{nickname:"test"});
-  hasJoinedRef.current = true;
-},[connected,entered])
-
+  useEffect(() => {
+    if (!connected || !entered) return;
+    if (hasJoinedRef.current) return;
+    socket.emit("join-room", { nickname: "test" });
+    hasJoinedRef.current = true;
+  }, [connected, entered]);
 
   return (
-    <div className="background-image">
-      <h1>초성놀이</h1>
+    <div className="desktop-screen">
+      {!entered && (
+        <div className="main-window">
+          <CommonHeader title="설치 프로그램: 자음놀이 (v1.0.2)" />
 
-      {!entered && !showGuide && (
-        <>
-          <button className="enterRoom" onClick={handleEnterClick}>
-            방 입장하기
-          </button>
+          <div className="window-content">
+            <h2 className="title1">세기말</h2>
+            <div className="app-identity">
+              <h1 className="title2">자음 놀이</h1>
+              <span className="versionName">v 1.0.2</span>
+            </div>
+            <div>
+              {!showGuide && (
+                <button className="enterRoom" onClick={handleEnterClick}>
+                  방 입장하기
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
-          {/*강제로 모달 띄우기 */}
-          <button
-            onClick={() => {
-              localStorage.removeItem("skipGuide");
-              setShowGuide(true);
-            }}
-          >
-            게임 설명 다시 보기 (Dev)
-          </button>
-        </>
+      {!entered && (
+        <div className="taskbar">
+          <button className="systemStartBtn">시작</button>
+
+          <div className="system-tray">{currentTime}</div>
+        </div>
       )}
 
       {showGuide && (
-        <GuideModal
-          onConfirm={(skipChecked: boolean) => enterGameRoom(skipChecked)}
-        />
+        <GuideModal onConfirm={(skipChecked) => enterGameRoom(skipChecked)} />
       )}
 
-      {entered && <GameRoom />}
+      {entered && (
+        <div className="game-room-wrapper">
+          <WaitingRoom />
+        </div>
+      )}
     </div>
   );
 };
