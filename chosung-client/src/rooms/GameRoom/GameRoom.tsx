@@ -14,29 +14,31 @@ import type {
 
 interface GameRoomProps {
   timeLimit: number;
+  initialData: any;
 }
 
-const GameRoom = ({ timeLimit }: GameRoomProps) => {
+const GameRoom = ({ timeLimit, initialData }: GameRoomProps) => {
   const [roomData, setRoomData] = useState<{
     players: PlayerSnapshot[];
     myId: string;
     myScore: number;
   }>({
-    players: [], //둘을 같이 받기때문
-    myId: "",
+    players: initialData?.players || [],
+    myId: initialData?.myId || socket.id || "",
     myScore: 0,
   });
 
-  const [state, setState] = useState<RoomStatus>("WAIT");
-
-  const [chosungPair, setChosungPair] = useState<[string, string]>(["?", "?"]);
+  const [state, setState] = useState<RoomStatus>("PLAY");
+  const [chosungPair, setChosungPair] = useState<[string, string]>(
+    initialData?.chosungPair || ["?", "?"],
+  );
   const [lastResult, setLastResult] = useState<any>(null);
 
   const [myWords, setMyWords] = useState<string[]>([]);
   const [opponentWords, setOpponentWords] = useState<string[]>([]);
 
   const [timeLeftMs, setTimeLeftMs] = useState<number>(0);
-  const [endAt, setEndAt] = useState<number | null>(null);
+  const [endAt, setEndAt] = useState<number | null>(initialData?.endAt || null);
 
   const [finalData, setFinalData] = useState<GameEndData | null>(null);
 
@@ -71,7 +73,9 @@ const GameRoom = ({ timeLimit }: GameRoomProps) => {
     };
   }, []);
 
-  const me = roomData.players.find((p) => p.socketId === roomData.myId);
+  const me = roomData.players.find(
+    (p) => p.socketId === (roomData.myId || socket.id),
+  );
   const opponent = roomData.players.find(
     (p) => p.socketId !== roomData.myId && roomData.myId !== "",
   );
@@ -92,6 +96,7 @@ const GameRoom = ({ timeLimit }: GameRoomProps) => {
     const onGameStart = ({ chosungPair, endAt }: any) => {
       setState("PLAY");
       setChosungPair(chosungPair);
+      console.log("chosung:", chosungPair);
       setEndAt(endAt);
       setMyWords([]);
       setOpponentWords([]);
@@ -179,11 +184,6 @@ const GameRoom = ({ timeLimit }: GameRoomProps) => {
         <CommonHeader
           style={{
             position: "absolute",
-            fontFamily: "'Batang', '바탕', serif",
-            fontSize: "14px",
-            fontWeight: "bold",
-            WebkitFontSmoothing: "none",
-            letterSpacing: "-0.5px",
           }}
           title="자음 놀이 (놀이마당)"
         />

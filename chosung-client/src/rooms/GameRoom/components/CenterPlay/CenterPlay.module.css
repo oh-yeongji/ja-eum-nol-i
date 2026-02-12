@@ -5,6 +5,7 @@
 }
 
 .chosungContainer {
+  margin-left: 20px;
   flex-direction: column;
   align-items: center;
   height: 200px;

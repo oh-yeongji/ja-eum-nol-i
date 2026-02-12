@@ -7,34 +7,26 @@ interface PlayerPanelProps {
 }
 
 const PlayerPanel = ({ nickname, words }: PlayerPanelProps) => {
-
-const scrollRef = useRef<HTMLDivElement>(null);
-  useEffect(()=>{
-    if(scrollRef.current){
+  const scrollRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  },[words]);
+  }, [words]);
 
   return (
     <div className={styles.playerWrapper}>
-
-    <div className={styles.nicknameContainer}>
-      <div className={styles.nickname}>{nickname}</div>
+      <div className={styles.nicknameContainer}>
+        <div className={styles.nickname}>{nickname}</div>
         <button className={styles.editBtn}>변경</button>
-        
       </div>
-     
-     <div className={styles.wordListContainer} ref={scrollRef}>
-     
-      {words.map((word, idx) => (
-        <div
-         className={styles.wordItem}
-          key={idx}
-        >
-          {word}
-        </div>
-      ))}
 
+      <div className={styles.wordListContainer} ref={scrollRef}>
+        {words.map((word, idx) => (
+          <div className={styles.wordItem} key={idx}>
+            {word}
+          </div>
+        ))}
       </div>
     </div>
   );

@@ -13,15 +13,15 @@
   z-index: 10;
 }
 .titleName {
+  text-rendering: geometricPrecision;
+  letter-spacing: -0.5px;
+  font-family: "바탕", "Batang", "AppleMyungjo", serif;
+  -webkit-font-smoothing: none;
   font-size: 14px;
-  color: #fff;
+  -moz-osx-font-smoothing: grayscale;
   margin-left: 4px;
-  -webkit-font-smoothing: none;
-  text-rendering: optimizeSpeed;
-  letter-spacing: -0.8px;
-
-  font-family: dotum, sans-serif;
-  -webkit-font-smoothing: none;
+  color: #fff;
+  font-weight: bold;
 }
 .closeBtn {
   display: flex;

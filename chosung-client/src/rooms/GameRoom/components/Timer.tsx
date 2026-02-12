@@ -15,10 +15,19 @@ const Timer = ({ timeLeftMs }: TimerProps) => {
         style={{
           height: "100px",
           background: "#ccc",
-          marginTop: "100px",
+          marginTop: "40px",
           fontSize: "50px",
           textAlign: "center",
           lineHeight: "110px",
+          fontFamily: "Galmuri9",
+          WebkitFontSmoothing: "none",
+          MozOsxFontSmoothing: "grayscale",
+          fontVariantNumeric: "tabular-nums",
+          imageRendering: "pixelated",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          marginBottom: "30px",
         }}
       >
         {mm}:{ss}

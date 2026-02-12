@@ -16,6 +16,8 @@ const WaitingRoom = () => {
   const [timeIdx, setTimeIdx] = useState(1);
 
   const [isGameStarted, setIsGameStarted] = useState<boolean>(false);
+  const [gameInitData, setGameInitData] = useState<any>(null);
+
   // const [isCancel, setIsCancel] = useState<boolean>(false);
 
   const me = users?.find((u) => u.socketId === myId);
@@ -67,23 +69,39 @@ const WaitingRoom = () => {
       setStartCountdown(null);
     });
 
-    socket.on("game-start", (gameData) => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-      setIsGameStarted(true);
-    });
-
     return () => {
       socket.off("set-my-id");
       socket.off("room-updated");
       socket.off("countdown-start");
       socket.off("room-wait");
-      socket.off("game-start");
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
   }, []);
 
-  if (isGameStarted) {
-    return <GameRoom timeLimit={times[timeIdx]} />;
+  useEffect(() => {
+    socket.on("game-start", (gameData) => {
+      console.log("게임 시작 데이터 수신:", gameData);
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      setGameInitData({
+        ...gameData,
+        players: users,
+        myId: myId,
+      });
+      setIsGameStarted(true);
+    });
+    return () => {
+      socket.off("game-start");
+    };
+  }, [users]);
+
+  useEffect(() => {
+    if (isOwner) {
+      socket.emit("change-setting", { timeLimit: times[timeIdx] });
+    }
+  }, [timeIdx, isOwner]);
+
+  if (isGameStarted && gameInitData) {
+    return <GameRoom timeLimit={times[timeIdx]} initialData={gameInitData} />;
   }
 
   return (
@@ -110,11 +128,6 @@ const WaitingRoom = () => {
         <CommonHeader
           style={{
             position: "absolute",
-            fontFamily: "'Batang', '바탕', serif",
-            fontSize: "14px",
-            fontWeight: "bold",
-            WebkitFontSmoothing: "none",
-            letterSpacing: "-0.5px",
           }}
           title="자음놀이 (대기방)"
         />
