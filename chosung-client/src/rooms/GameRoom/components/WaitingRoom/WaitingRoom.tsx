@@ -10,23 +10,24 @@ const WaitingRoom = () => {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const [users, setUsers] = useState<PlayerSnapshot[]>([]);
+  const [myId, setMyId] = useState<string>("");
   const [startCountdown, setStartCountdown] = useState<number | null>(null);
   const times = [30, 60, 90, 120];
   const [timeIdx, setTimeIdx] = useState(1);
 
   const [isGameStarted, setIsGameStarted] = useState<boolean>(false);
-  const [isCancel, setIsCancel] = useState<boolean>(false);
-
-  const myId = socket.id;
+  // const [isCancel, setIsCancel] = useState<boolean>(false);
 
   const me = users?.find((u) => u.socketId === myId);
-  console.log("me:", me);
-
-  const other = users?.find((u) => u.socketId !== myId);
+  console.log("WaitingRoom Render - myId:", myId, "me found:", !!me);
 
   const isOwner = me?.isOwner || false;
 
   useEffect(() => {
+    socket.on("set-my-id", ({ you }) => {
+      console.log("내 아이디 할당됨:", you);
+      setMyId(you);
+    });
     socket.on(
       "room-updated",
       ({
@@ -72,6 +73,7 @@ const WaitingRoom = () => {
     });
 
     return () => {
+      socket.off("set-my-id");
       socket.off("room-updated");
       socket.off("countdown-start");
       socket.off("room-wait");
