@@ -226,6 +226,20 @@ io.on("connection", (socket: Socket) => {
     socket.emit("set-my-id", { you: socket.id, yourScore: 0 });
   });
 
+  /*-------------------WaitingRoom 채팅-------------------------------*/
+  socket.on("send-chat", (chatData) => {
+    const { socketId, nickname, message } = chatData;
+
+    if (!message || message.trim() === "") return;
+    console.log(`[채팅]${nickname}:${message}`);
+
+    io.emit("receive-chat", {
+      socketId,
+      nickname,
+      message,
+    });
+  });
+
   /*---------WaitingRoom 시간 설정 변경---------------*/
   socket.on("change-setting", ({ timeLimit }) => {
     const resultData = getRoomBySocket(socket.id);

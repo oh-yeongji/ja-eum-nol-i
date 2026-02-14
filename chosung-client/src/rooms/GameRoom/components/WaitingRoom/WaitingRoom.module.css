@@ -243,6 +243,17 @@
   background: #000;
   color: #fff;
 }
+.chatContainer {
+  display: flex;
+  align-items: center;
+  margin: 3px 10px;
+}
+.chatContainer .semicolon {
+  margin: 0 5px;
+}
+.chatContainer .chat {
+  /* margin-left: 1s0px; */
+}
 
 .inputContainer {
   display: flex;

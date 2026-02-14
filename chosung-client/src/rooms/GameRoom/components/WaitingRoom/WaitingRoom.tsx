@@ -4,6 +4,7 @@ import styles from "./WaitingRoom.module.css";
 import CommonHeader from "../CommonHeader/CommonHeader";
 import GameRoom from "../../GameRoom";
 import type { RoomStatus, PlayerSnapshot } from "@/types/domain/room";
+import { log } from "console";
 
 const WaitingRoom = () => {
   const [state, setState] = useState<RoomStatus>("WAIT");
@@ -11,6 +12,11 @@ const WaitingRoom = () => {
 
   const [users, setUsers] = useState<PlayerSnapshot[]>([]);
   const [myId, setMyId] = useState<string>("");
+  const [chatList, setChatList] = useState<
+    { nickname: string; message: string }[]
+  >([]);
+  const chatInputRef = useRef<HTMLInputElement>(null);
+
   const [startCountdown, setStartCountdown] = useState<number | null>(null);
   const times = [30, 60, 90, 120];
   const [timeIdx, setTimeIdx] = useState(1);
@@ -21,15 +27,35 @@ const WaitingRoom = () => {
   // const [isCancel, setIsCancel] = useState<boolean>(false);
 
   const me = users?.find((u) => u.socketId === myId);
+
+  const handleSendMessage = () => {
+    const message = chatInputRef.current?.value;
+    if (!message || message.trim() === "") return;
+
+    socket.emit("send-chat", {
+      socketId: myId,
+      nickname: me?.nickname,
+      message,
+    });
+
+    if (chatInputRef.current) {
+      chatInputRef.current.value = "";
+    }
+  };
+
   console.log("WaitingRoom Render - myId:", myId, "me found:", !!me);
 
   const isOwner = me?.isOwner || false;
 
   useEffect(() => {
     socket.on("set-my-id", ({ you }) => {
-      console.log("내 아이디 할당됨:", you);
       setMyId(you);
     });
+
+    socket.on("receive-chat", (chatData) => {
+      setChatList((prev) => [...prev, chatData]);
+    });
+
     socket.on(
       "room-updated",
       ({
@@ -71,6 +97,7 @@ const WaitingRoom = () => {
 
     return () => {
       socket.off("set-my-id");
+      socket.off("receive-chat");
       socket.off("room-updated");
       socket.off("countdown-start");
       socket.off("room-wait");
@@ -203,10 +230,28 @@ const WaitingRoom = () => {
             <div className={styles.chatLog}>
               [시스템] player1님이 대기실에 입장했습니다.
             </div>
-            <div className={styles.chat}>player1: 안녕하세요~</div>
+
+            {chatList.map((chat, idx) => (
+              <div key={idx} className={styles.chatContainer}>
+                <div className={styles.nickname}>{chat.nickname}</div>
+                <div className={styles.semicolon}>:</div>
+                <div className={styles.chat}>{chat.message}</div>
+              </div>
+            ))}
+
             <div className={styles.inputContainer}>
-              <input className={styles.msgChat} type="text" />
-              <button className={styles.msgSendBtn}>Enter</button>
+              <input
+                className={styles.msgChat}
+                type="text"
+                ref={chatInputRef}
+                onKeyDown={(e) => {
+                  if (e.nativeEvent.isComposing) return;
+                  if (e.key === "Enter") handleSendMessage();
+                }}
+              />
+              <button className={styles.msgSendBtn} onClick={handleSendMessage}>
+                Enter
+              </button>
             </div>
           </div>
         </div>
