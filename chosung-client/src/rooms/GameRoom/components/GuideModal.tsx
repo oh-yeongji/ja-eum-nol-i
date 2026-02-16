@@ -2,12 +2,49 @@ import React, { useState, useEffect } from "react";
 import CommonHeader from "./CommonHeader/CommonHeader";
 
 interface GuideModalProps {
+  initialSkip: boolean;
   onConfirm: (skipChecked: boolean) => void;
+  onClose: () => void;
+  onToggle: (checked: boolean) => void;
 }
 
-const GuideModal = ({ onConfirm }: GuideModalProps) => {
-  const [skip, setSkip] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(60);
+const GuideModal = ({
+  initialSkip,
+  onConfirm,
+  onClose,
+  onToggle,
+}: GuideModalProps) => {
+  const [skip, setSkip] = useState(initialSkip);
+  const [timeLeft, setTimeLeft] = useState(30);
+
+  const handleToggle = (checked: boolean) => {
+    setSkip(checked);
+    onToggle(checked);
+  };
+  useEffect(() => {
+    setSkip(initialSkip);
+  }, [initialSkip]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Enter") {
+        onConfirm(skip);
+      } else if (e.key === "Escape") {
+        onClose();
+      } else if (e.code === "Space" || e.key.toLowerCase() === "s") {
+        if (e.code === "Space") e.preventDefault();
+        const nextSkip = !skip;
+        setSkip(nextSkip);
+        onToggle(nextSkip);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [onConfirm, onClose, skip, onToggle]);
 
   useEffect(() => {
     if (timeLeft === 0) {
@@ -25,29 +62,49 @@ const GuideModal = ({ onConfirm }: GuideModalProps) => {
   return (
     <div style={styles.overlay}>
       <div style={styles[`main-window`]}>
-        <CommonHeader title="[정보] 도움말 - Help.exe" />
+        <CommonHeader title="[정보] 도움말 - Help.exe" onClose={onClose} />
 
         <div style={styles.contentContainer}>
-          <h2 style={styles.header}>자음 놀이 이용 안내</h2>
+          <h2 style={styles.header}>※ 자음 놀이 이용 안내 ※</h2>
 
           <div style={styles.textBox}>
-            <p style={styles.textLine}>• 동음이의어는 불허합니다.</p>
-            <p style={styles.textLine}>
-              • 방 입장 후 재접속(새로고침) 시 강제 퇴장 처리되오니
-              주의하십시오.
-            </p>
-            <p style={styles.textLine}>
-              • 게임 진행 중 재접속(새로고침)은 비신사적인 행위로 간주하여
-              <span style={{ color: "red" }}> 자동 기권패</span>로 처리됩니다.
-            </p>
-            <p style={styles.textLine}>
-              • 기본 대결 시간은 60초이며, 방장(첫입장자)의 설정에 따라
-              30/60/90/120초로 가변 가능합니다.
-            </p>
-            <p style={styles.textLine}>
-              • 별호(닉네임) 변경은 일일 1회로 제한되오니 신중을 기해주시기
-              바랍니다.
-            </p>
+            {[
+              <>동음이의어는 불허합니다.</>,
+              <>
+                방 입장 후 재접속(새로고침) 시 강제 퇴장 처리되오니
+                주의하십시오.
+              </>,
+              <>
+                게임 진행 중 재접속(새로고침)은 비신사적인 행위로 간주하여
+                <span style={{ color: "red" }}> 자동 기권패</span>로 처리됩니다.
+              </>,
+              <>
+                기본 대결 시간은 60초이며, 방장(첫입장자)의 설정에 따라
+                30/60/90/120초로 가변 가능합니다.
+              </>,
+              <>
+                별호(닉네임) 변경은 일일 1회로 제한되오니 신중을 기해주시기
+                바랍니다.
+              </>,
+            ].map((content, index) => (
+              <div
+                key={index}
+                style={{
+                  display: "flex",
+                  gap: "8px",
+                }}
+              >
+                <span style={{ flexShrink: 0 }}>■</span>
+
+                <div
+                  style={{
+                    wordBreak: "keep-all",
+                  }}
+                >
+                  {content}
+                </div>
+              </div>
+            ))}
           </div>
 
           <div style={styles.statusLine}>
@@ -59,7 +116,7 @@ const GuideModal = ({ onConfirm }: GuideModalProps) => {
               <input
                 type="checkbox"
                 checked={skip}
-                onChange={(e) => setSkip(e.target.checked)}
+                onChange={(e) => handleToggle(e.target.checked)}
                 style={{
                   ...styles.checkbox,
                   backgroundImage: skip
@@ -70,7 +127,7 @@ const GuideModal = ({ onConfirm }: GuideModalProps) => {
                   backgroundPosition: "center",
                 }}
               />
-              ▶ 다시 보지 않기 (Skip)
+              ▶ 다시 보지 않기 (S)
             </label>
             <button style={styles.confirmBtn} onClick={() => onConfirm(skip)}>
               확인 (Enter)
@@ -126,9 +183,6 @@ const styles: { [key: string]: React.CSSProperties } = {
     marginBottom: "15px",
     backgroundColor: "#fff",
     border: "2px inset #808080",
-  },
-  textLine: {
-    margin: "8px 0",
   },
   statusLine: {
     fontSize: "12px",

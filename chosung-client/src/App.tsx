@@ -8,14 +8,27 @@ import WaitingRoom from "./rooms/GameRoom/components/WaitingRoom/WaitingRoom";
 import CommonHeader from "./rooms/GameRoom/components/CommonHeader/CommonHeader";
 
 const App = () => {
-  const [showGuide, setShowGuide] = useState(false);
   const [connected, setConnected] = useState(false);
-  const [status, setStatus] = useState<RoomStatus>("WAIT");
-  const [entered, setEntered] = useState(false);
   const [currentTime, setCurrentTime] = useState("");
-
+  const [status, setStatus] = useState<RoomStatus>("WAIT");
+  const [showGuide, setShowGuide] = useState(false);
+  const [skip, setSkip] = useState(() => {
+    return localStorage.getItem("skipGuide") === "true";
+  });
+  const [entered, setEntered] = useState(false);
   const hasJoinedRef = useRef(false);
 
+  const handleConfirm = (skipChecked: boolean) => {
+    setSkip(skipChecked);
+    if (skipChecked) {
+      localStorage.setItem("skipGuide", "true");
+    }
+    enterGameRoom();
+  };
+
+  const handleClose = () => {
+    setShowGuide(false);
+  };
   useEffect(() => {
     const currentClock = () => {
       const now = new Date();
@@ -101,7 +114,12 @@ const App = () => {
       )}
 
       {showGuide && (
-        <GuideModal onConfirm={(skipChecked) => enterGameRoom(skipChecked)} />
+        <GuideModal
+          initialSkip={skip}
+          onToggle={setSkip}
+          onConfirm={handleConfirm}
+          onClose={handleClose}
+        />
       )}
 
       {entered && (
