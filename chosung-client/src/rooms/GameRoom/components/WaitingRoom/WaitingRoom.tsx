@@ -4,7 +4,6 @@ import styles from "./WaitingRoom.module.css";
 import CommonHeader from "../CommonHeader/CommonHeader";
 import GameRoom from "../../GameRoom";
 import type { RoomStatus, PlayerSnapshot } from "@/types/domain/room";
-import { log } from "console";
 
 const WaitingRoom = () => {
   const [state, setState] = useState<RoomStatus>("WAIT");
@@ -13,10 +12,9 @@ const WaitingRoom = () => {
   const [users, setUsers] = useState<PlayerSnapshot[]>([]);
   const [myId, setMyId] = useState<string>("");
   const [chatList, setChatList] = useState<
-    { nickname: string; message: string }[]
+    { socketId: string; type: string; nickname: string; message: string }[]
   >([]);
   const chatInputRef = useRef<HTMLInputElement>(null);
-
   const [startCountdown, setStartCountdown] = useState<number | null>(null);
   const times = [30, 60, 90, 120];
   const [timeIdx, setTimeIdx] = useState(1);
@@ -30,7 +28,10 @@ const WaitingRoom = () => {
 
   const handleSendMessage = () => {
     const message = chatInputRef.current?.value;
-    if (!message || message.trim() === "") return;
+    if (!me?.nickname || !message || message.trim() === "") {
+      console.warn("닉네임 정보가 없거나 메시지가 비어있습니다.");
+      return;
+    }
 
     socket.emit("send-chat", {
       socketId: myId,
@@ -54,6 +55,10 @@ const WaitingRoom = () => {
 
     socket.on("receive-chat", (chatData) => {
       setChatList((prev) => [...prev, chatData]);
+    });
+
+    socket.on("load-history", (history) => {
+      setChatList(history);
     });
 
     socket.on(
@@ -98,6 +103,7 @@ const WaitingRoom = () => {
     return () => {
       socket.off("set-my-id");
       socket.off("receive-chat");
+      socket.off("load-history");
       socket.off("room-updated");
       socket.off("countdown-start");
       socket.off("room-wait");
@@ -227,17 +233,30 @@ const WaitingRoom = () => {
             </div>
           </div>
           <div className={styles.chatScreen}>
-            <div className={styles.chatLog}>
-              [시스템] player1님이 대기실에 입장했습니다.
-            </div>
+            {chatList.map((chat, idx) => {
+              const isSystem =
+                chat.socketId === "system" || chat.type === "system";
 
-            {chatList.map((chat, idx) => (
-              <div key={idx} className={styles.chatContainer}>
-                <div className={styles.nickname}>{chat.nickname}</div>
-                <div className={styles.semicolon}>:</div>
-                <div className={styles.chat}>{chat.message}</div>
-              </div>
-            ))}
+              const isMe = !isSystem && chat.nickname === me?.nickname;
+              return (
+                <div key={idx} className={styles.chatContainer}>
+                  {isSystem ? (
+                    <div className={styles.systemMsg}>
+                      <span className={styles.systemTag}>[시스템]</span>
+                      <span className={styles.systemChat}>{chat.message}</span>
+                    </div>
+                  ) : (
+                    <div
+                      className={`${styles.userMsg} ${isMe ? styles.myChat : ""}`}
+                    >
+                      <span className={styles.nickname}>{chat.nickname}</span>
+                      <span className={styles.semicolon}>:</span>
+                      <span className={styles.userChat}>{chat.message}</span>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
 
             <div className={styles.inputContainer}>
               <input

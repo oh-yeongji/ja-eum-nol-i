@@ -13,10 +13,12 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@types/mongoose": "^5.11.96",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
     "fast-xml-parser": "^5.3.3",
+    "mongoose": "^9.2.1",
     "socket.io": "^4.8.1"
   },
   "devDependencies": {

@@ -3,7 +3,9 @@ import { createServer } from "http";
 import cors from "cors";
 import { Server, Socket } from "socket.io";
 import path from "path";
-import { fileURLToPath } from "url";
+// import { fileURLToPath } from "url";
+import { connectDB } from "./config/db";
+import { Chat } from "./models/Chat";
 import { randomUUID } from "crypto";
 import gameRouter from "./routes/game.routes";
 import { getRandomChosungPair } from "./game/chosung";
@@ -32,6 +34,8 @@ const distPath = path.join(process.cwd(), "..", "chosung-client", "dist");
 app.use(express.static(distPath));
 
 const httpServer = createServer(app);
+
+connectDB();
 
 //socket cors
 const io = new Server(httpServer, {
@@ -166,7 +170,7 @@ let tempNumber = 0;
 io.on("connection", (socket: Socket) => {
   console.log(`[CONNECT] 신규 접속: ${socket.id}`);
   /* ---------- 방 참가 ---------- */
-  socket.on("join-room", () => {
+  socket.on("join-room", async () => {
     console.log(`[JOIN-ROOM] 유저가 방 참가를 요청함: ${socket.id}`);
     const already = getRoomBySocket(socket.id);
     if (already) return;
@@ -205,7 +209,42 @@ io.on("connection", (socket: Socket) => {
       score: 0,
     });
 
+    try {
+      const systemMsg = new Chat({
+        roomId,
+        sender: "system",
+        message: `${tempNickname}님이 입장했습니다.`,
+        type: "system",
+      });
+      await systemMsg.save();
+
+      const history = await Chat.find({
+        roomId,
+      })
+        .sort({ createdAt: 1 })
+        .limit(50);
+
+      const mappedHistory = history.map((chat) => ({
+        socketId: chat.sender === "system" ? "system" : chat.sender,
+        nickname: chat.sender,
+        message: chat.message,
+        type: chat.type,
+      }));
+
+      socket.emit("load-history", mappedHistory);
+    } catch (err) {
+      console.error("DB저장 실패:", err);
+      socket.emit("load-history", []);
+    }
+
     socket.join(roomId);
+
+    socket.broadcast.to(roomId).emit("receive-chat", {
+      socketId: "system",
+      nickname: "",
+      message: `${tempNickname}님이 입장했습니다.`,
+      type: "system",
+    });
 
     const playerSnapshot: PlayerSnapshot[] = Array.from(
       room.players.values(),
@@ -227,17 +266,33 @@ io.on("connection", (socket: Socket) => {
   });
 
   /*-------------------WaitingRoom 채팅-------------------------------*/
-  socket.on("send-chat", (chatData) => {
+  socket.on("send-chat", async (chatData) => {
     const { socketId, nickname, message } = chatData;
 
     if (!message || message.trim() === "") return;
-    console.log(`[채팅]${nickname}:${message}`);
 
-    io.emit("receive-chat", {
-      socketId,
-      nickname,
+    const resultData = getRoomBySocket(socket.id);
+    if (!resultData) return;
+
+    const { room, roomId } = resultData;
+    const player = room.players.get(socket.id);
+    const realNickname = player ? player.nickname : "Unknown";
+
+    const newChat = new Chat({
+      roomId,
+      sender: realNickname,
       message,
+      type: "talk",
     });
+    await newChat.save();
+
+    io.to(roomId).emit("receive-chat", {
+      socketId,
+      nickname: realNickname,
+      message,
+      type: "talk",
+    });
+    console.log(`[채팅]${nickname}:${message}`);
   });
 
   /*---------WaitingRoom 시간 설정 변경---------------*/
@@ -350,7 +405,7 @@ io.on("connection", (socket: Socket) => {
 
 =======================================================*/
 
-  socket.on("disconnect", (reason) => {
+  socket.on("disconnect", async (reason) => {
     console.log(`[EXIT] 유저 퇴장함: ${socket.id}, 사유: ${reason}`);
 
     const resultData = getRoomBySocket(socket.id);
@@ -391,7 +446,11 @@ io.on("connection", (socket: Socket) => {
       room.players.delete(leaverId);
     }
     // 방이 비었으면 삭제
-    if (room.players.size === 0) rooms.delete(roomId);
+    if (room.players.size === 0) {
+      rooms.delete(roomId);
+      await Chat.deleteMany({ roomId });
+      console.log(`[DELETE] 방 ${roomId} 종료 및 채팅 내역 삭제`);
+    }
   });
 });
 const PORT = process.env.PORT || 3000;
