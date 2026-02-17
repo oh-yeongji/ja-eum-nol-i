@@ -266,9 +266,7 @@ io.on("connection", (socket: Socket) => {
   });
 
   /*-------------------WaitingRoom 채팅-------------------------------*/
-  socket.on("send-chat", async (chatData) => {
-    const { socketId, nickname, message } = chatData;
-
+  socket.on("send-chat", async ({ message }) => {
     if (!message || message.trim() === "") return;
 
     const resultData = getRoomBySocket(socket.id);
@@ -278,21 +276,25 @@ io.on("connection", (socket: Socket) => {
     const player = room.players.get(socket.id);
     const realNickname = player ? player.nickname : "Unknown";
 
-    const newChat = new Chat({
-      roomId,
-      sender: realNickname,
-      message,
-      type: "talk",
-    });
-    await newChat.save();
+    try {
+      const newChat = new Chat({
+        roomId,
+        sender: realNickname,
+        message,
+        type: "talk",
+      });
 
-    io.to(roomId).emit("receive-chat", {
-      socketId,
-      nickname: realNickname,
-      message,
-      type: "talk",
-    });
-    console.log(`[채팅]${nickname}:${message}`);
+      await newChat.save();
+
+      io.to(roomId).emit("receive-chat", {
+        socketId: socket.id,
+        nickname: realNickname,
+        message,
+        type: "talk",
+      });
+    } catch (err) {
+      console.error("채팅 저장 실패:", err);
+    }
   });
 
   /*---------WaitingRoom 시간 설정 변경---------------*/

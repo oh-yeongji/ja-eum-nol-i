@@ -1,8 +1,7 @@
 import mongoose from "mongoose";
 import dotenv from "dotenv";
-import path from "path";
 
-dotenv.config({ path: path.join(process.cwd(), ".env") });
+dotenv.config();
 
 export const connectDB = async () => {
   console.log(" 서버 실행 위치:", process.cwd());
