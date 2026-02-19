@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap");
+
 .out-of-stage {
   position: fixed;
   inset: 0;
@@ -5,6 +7,62 @@
   z-index: 1;
 }
 
+.gameStartOverlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 9999999;
+}
+
+.gameStartContent {
+  padding: 0;
+  background-color: #c0c0c0;
+  border-top: 2px solid #ffffff;
+  border-left: 2px solid #ffffff;
+  border-right: 2px solid #404040;
+  border-bottom: 2px solid #404040;
+  outline: 1px solid #000;
+  box-shadow: 10px 10px 0px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+}
+
+.gameStartContent::before {
+  content: "Information";
+  display: block;
+  height: 25px;
+  background: linear-gradient(90deg, #000080, #1084d0);
+  color: white;
+  font-family: "Malgun Gothic", sans-serif;
+  padding-left: 5px;
+  display: flex;
+  align-items: center;
+}
+
+.gamestartText {
+  padding: 40px 60px;
+  font-family: "Press Start 2P", cursive;
+  font-size: 3rem;
+  color: #000;
+  text-shadow: 2px 2px 0px #dfdfdf;
+  text-shadow: none;
+  animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes popIn {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
 .stage {
   width: 1200px;
   height: 700px;
@@ -22,4 +80,50 @@
   border-right: 2px solid #808080;
   border-bottom: 2px solid #808080;
   padding-top: 30px;
+}
+
+.gameEndOverlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 9999999;
+}
+
+.gameEndContent {
+  padding: 0;
+  background-color: #c0c0c0;
+  border-top: 2px solid #ffffff;
+  border-left: 2px solid #ffffff;
+  border-right: 2px solid #404040;
+  border-bottom: 2px solid #404040;
+  outline: 1px solid #000;
+  box-shadow: 10px 10px 0px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+}
+
+.gameEndContent::before {
+  content: "Information";
+  display: block;
+  height: 25px;
+  background: linear-gradient(90deg, #000080, #1084d0);
+  color: white;
+  font-family: "Malgun Gothic", sans-serif;
+  padding-left: 5px;
+  display: flex;
+  align-items: center;
+}
+
+.gameEndText {
+  padding: 40px 60px;
+  font-family: "Press Start 2P", cursive;
+  font-size: 3rem;
+  color: #000;
+  text-shadow: 2px 2px 0px #dfdfdf;
+  text-shadow: none;
+  animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }

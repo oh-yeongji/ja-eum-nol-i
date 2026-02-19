@@ -29,6 +29,7 @@ const GameRoom = ({ timeLimit, initialData }: GameRoomProps) => {
   });
 
   const [state, setState] = useState<RoomStatus>("PLAY");
+  const [showStartOverlay, setShowStartOverlay] = useState<boolean>(true);
   const [chosungPair, setChosungPair] = useState<[string, string]>(
     initialData?.chosungPair || ["?", "?"],
   );
@@ -37,9 +38,9 @@ const GameRoom = ({ timeLimit, initialData }: GameRoomProps) => {
   const [myWords, setMyWords] = useState<string[]>([]);
   const [opponentWords, setOpponentWords] = useState<string[]>([]);
 
-  const [timeLeftMs, setTimeLeftMs] = useState<number>(0);
+  const [timeLeftMs, setTimeLeftMs] = useState<number>(timeLimit * 1000);
   const [endAt, setEndAt] = useState<number | null>(initialData?.endAt || null);
-
+  const [showEndOverlay, setShowEndOverlay] = useState<boolean>(false);
   const [finalData, setFinalData] = useState<GameEndData | null>(null);
 
   const resetGameStatus = () => {
@@ -48,6 +49,39 @@ const GameRoom = ({ timeLimit, initialData }: GameRoomProps) => {
     setMyWords([]);
     setOpponentWords([]);
   };
+
+  // 게임시작 문구 나올때
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowStartOverlay(false);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  // 타이머 끝.
+  useEffect(() => {
+    if (!endAt || state !== "PLAY") return;
+
+    const tick = setInterval(() => {
+      const actualRemaining = Math.max(0, endAt - Date.now());
+
+      const displayTime = Math.min(timeLimit * 1000, actualRemaining);
+
+      if (showStartOverlay) {
+        setTimeLeftMs(timeLimit * 1000);
+      } else {
+        setTimeLeftMs(displayTime);
+      }
+
+      if (Date.now() >= endAt) {
+        clearInterval(tick);
+        setTimeLeftMs(0);
+      }
+    }, 100);
+
+    return () => clearInterval(tick);
+  }, [endAt, state, showStartOverlay, timeLimit]);
 
   // 게임 방 입장 할때
   useEffect(() => {
@@ -127,24 +161,6 @@ const GameRoom = ({ timeLimit, initialData }: GameRoomProps) => {
     };
   }, []);
 
-  // 타이머 시작
-  useEffect(() => {
-    if (!endAt || state !== "PLAY") return;
-
-    const id = setInterval(() => {
-      setTimeLeftMs(Math.max(0, endAt - Date.now()));
-    }, 1000);
-
-    return () => clearInterval(id);
-  }, [endAt, state]);
-
-  //타이머 종료+ 보조안전
-  useEffect(() => {
-    if (state === "PLAY" && endAt && Date.now() >= endAt) {
-      setState("END");
-    }
-  }, [timeLeftMs, state, endAt]);
-
   useEffect(() => {
     const onGameEnd = (data: GameEndData) => {
       if (!data || !data.scores) return;
@@ -156,8 +172,14 @@ const GameRoom = ({ timeLimit, initialData }: GameRoomProps) => {
       if (opData) opData.score;
 
       setFinalData(data);
-      setState("END");
-      setEndAt(null);
+      setTimeLeftMs(0);
+
+      setShowEndOverlay(true);
+
+      setTimeout(() => {
+        setShowEndOverlay(false);
+        setState("END");
+      }, 1000);
     };
 
     socket.on("game-end", onGameEnd);
@@ -165,17 +187,33 @@ const GameRoom = ({ timeLimit, initialData }: GameRoomProps) => {
     return () => {
       socket.off("game-end", onGameEnd);
     };
-  }, []);
+  }, [roomData.myId]);
 
   return (
     <>
       <div className={styles["out-of-stage"]} />
 
-      {state === "END" && finalData && (
+      {showStartOverlay && (
+        <div className={styles.gameStartOverlay}>
+          <div className={styles.gameStartContent}>
+            <h1 className={styles.gamestartText}>GAME START!</h1>
+          </div>
+        </div>
+      )}
+
+      {showEndOverlay && (
+        <div className={styles.gameEndOverlay}>
+          <div className={styles.gameEndContent}>
+            <h1 className={styles.gameEndText}>GAME END!</h1>
+          </div>
+        </div>
+      )}
+
+      {state === "END" && !showEndOverlay && finalData && (
         <ResultModal
           socket={socket}
-          scores={finalData.scores}
-          words={finalData.words}
+          scores={finalData.scores || []}
+          words={finalData.words || []}
           onReset={resetGameStatus}
         />
       )}
@@ -193,10 +231,14 @@ const GameRoom = ({ timeLimit, initialData }: GameRoomProps) => {
           words={myWords}
         />
         <CenterPlay
-          chosungPair={chosungPair}
+          chosungPair={showStartOverlay ? ["?", "?"] : chosungPair}
           lastResult={lastResult}
           onSubmitWord={(word) => socket.emit("submit-word", { word })}
-          timeLeftMs={timeLeftMs}
+          timeLeftMs={
+            showStartOverlay
+              ? timeLimit * 1000
+              : Math.min(timeLimit * 1000, timeLeftMs)
+          }
           state={state}
         />
         <PlayerPanel

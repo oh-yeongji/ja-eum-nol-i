@@ -124,13 +124,18 @@ const startGame = (roomId: string, room: Room) => {
 
   const limit = room.timeLimit || 60;
   const durationMs = limit * 1000;
-  const endAt = Date.now() + durationMs;
+  const bufferTime = 1500;
+  const endAt = Date.now() + durationMs + bufferTime;
+  console.log("endAt:");
 
+  room.endAt = endAt;
   io.to(roomId).emit("game-start", {
     chosungPair: room.chosungPair,
 
     endAt,
   });
+
+  if (room.gameDurationTimer) clearTimeout(room.gameDurationTimer);
 
   room.gameDurationTimer = setTimeout(() => {
     if (room.status !== "PLAY") return;
@@ -141,20 +146,16 @@ const startGame = (roomId: string, room: Room) => {
 
     const finalScore = Array.from(room.players.values()).map((p) => ({
       nickname: p.nickname,
-
       score: p.score,
-
       socketId: p.socketId,
-
       isLeaver: false,
     }));
 
     io.to(roomId).emit("game-end", {
       words: Array.from(room.usedWords),
-
       scores: finalScore,
     });
-  }, durationMs);
+  }, durationMs + bufferTime);
 };
 /* =============================================================================
    
@@ -342,6 +343,7 @@ io.on("connection", (socket: Socket) => {
     if (owner?.isReady && user?.isReady) {
       if (room.startTimer) {
         clearTimeout(room.startTimer);
+
         room.startTimer = undefined;
       }
       startGame(roomId, room);
@@ -371,6 +373,7 @@ io.on("connection", (socket: Socket) => {
     if (!resultData || resultData.room.status !== "PLAY") return;
 
     const { room, roomId } = resultData;
+    if (room.endAt && Date.now() > room.endAt) return;
     const trimmed = word.trim();
 
     //2.validate

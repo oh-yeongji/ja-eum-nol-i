@@ -19,9 +19,11 @@ const CHOSUNG_LIST = [
 ];
 
 const BLACKLIST = new Set([
+  "ㅅㅋ",
   "ㄹㄱ",
   "ㄹㄴ",
   "ㄹㄷ",
+  "ㄹㅅ",
   "ㄹㅇ",
   "ㄹㅈ",
   "ㄹㅋ",
@@ -46,6 +48,7 @@ const BLACKLIST = new Set([
   "ㅇㅍ",
   "ㅎㅍ",
   "ㅊㅋ",
+  "ㅊㅌ",
   "ㅊㅍ",
   "ㅁㅍ",
   "ㄴㅎ",
