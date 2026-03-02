@@ -1,11 +1,14 @@
+export const MAX_TIME_CHANGE_COUNT = 3;
 export interface Room {
-  status: "WAIT" | "COUNTDOWN" | "PLAY" | "END";
+  status: "WAIT" | "READY_NOTICE" | "COUNTDOWN" | "PLAY" | "END";
   players: Map<string, Player>;
   chosungPair: [string, string];
   usedWords: Set<UsedWord>;
+  readyNoticeTimer: NodeJS.Timeout | undefined;
   startTimer?: NodeJS.Timeout | undefined;
   gameDurationTimer?: NodeJS.Timeout | undefined;
   timeLimit: number;
+  usedTimeChangeCount: number;
   endAt?: number;
 }
 

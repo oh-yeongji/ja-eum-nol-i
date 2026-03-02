@@ -76,9 +76,19 @@ const App = () => {
   }, []);
 
   useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Enter" && !entered && !showGuide) {
+        handleEnterClick();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [entered, showGuide]);
+
+  useEffect(() => {
     if (!connected || !entered) return;
     if (hasJoinedRef.current) return;
-    socket.emit("join-room", { nickname: "test" });
+    socket.emit("join-room");
     hasJoinedRef.current = true;
   }, [connected, entered]);
 

@@ -10,6 +10,7 @@ import { randomUUID } from "crypto";
 import gameRouter from "./routes/game.routes";
 import { getRandomChosungPair } from "./game/chosung";
 import { validateWord } from "./game/gameService";
+import { MAX_TIME_CHANGE_COUNT } from "./types";
 import type { Room, UsedWord, Player, PlayerSnapshot } from "./types";
 
 const app = express();
@@ -82,9 +83,11 @@ const createRoom = (): { roomId: string; room: Room } => {
     players: new Map(),
     chosungPair: getRandomChosungPair(),
     usedWords: new Set<UsedWord>(),
+    readyNoticeTimer: undefined,
     startTimer: undefined,
     gameDurationTimer: undefined,
     timeLimit: 60,
+    usedTimeChangeCount: 0,
     endAt: undefined,
   };
 
@@ -115,23 +118,24 @@ const getRoomBySocket = (socketId: string) => {
 
 const startGame = (roomId: string, room: Room) => {
   if (room.status === "PLAY") return;
+
   room.status = "PLAY";
   room.startTimer = undefined;
-
   room.chosungPair = getRandomChosungPair();
-
   room.usedWords = new Set();
+
+  room.players.forEach((player) => {
+    player.score = 0;
+  });
 
   const limit = room.timeLimit || 60;
   const durationMs = limit * 1000;
   const bufferTime = 1500;
   const endAt = Date.now() + durationMs + bufferTime;
-  console.log("endAt:");
 
   room.endAt = endAt;
   io.to(roomId).emit("game-start", {
     chosungPair: room.chosungPair,
-
     endAt,
   });
 
@@ -157,6 +161,37 @@ const startGame = (roomId: string, room: Room) => {
     });
   }, durationMs + bufferTime);
 };
+
+/*===================================================================
+        
+  대기방 시작 카운트 함수
+
+====================================================================*/
+
+const startCountdown = (
+  roomId: string,
+  room: any,
+  trigger: "FORCE" | "ALL_READY",
+) => {
+  if (room.status === "COUNTDOWN") return;
+
+  if (room.startTimer) clearTimeout(room.startTimer);
+
+  room.status = "COUNTDOWN";
+
+  io.to(roomId).emit("all-ready-notice", { trigger });
+
+  setTimeout(() => {
+    io.to(roomId).emit("countdown-start", { seconds: 3 });
+
+    room.startTimer = setTimeout(() => {
+      if (room.status === "COUNTDOWN") {
+        startGame(roomId, room);
+      }
+    }, 3000);
+  }, 1500);
+};
+
 /* =============================================================================
    
 
@@ -214,7 +249,7 @@ io.on("connection", (socket: Socket) => {
       const systemMsg = new Chat({
         roomId,
         sender: "system",
-        message: `${tempNickname}님이 입장했습니다.`,
+        message: `${tempNickname}님이 입장 하였습니다.`,
         type: "system",
       });
       await systemMsg.save();
@@ -304,10 +339,24 @@ io.on("connection", (socket: Socket) => {
     if (!resultData) return;
     const { room, roomId } = resultData;
 
-    if (room.players.get(socket.id)?.isOwner) {
-      room.timeLimit = timeLimit;
-      io.to(roomId).emit("settings-updated", { timeLimit });
-    }
+    const player = room.players.get(socket.id);
+    if (!player || !player.isOwner) return;
+    if (room.usedTimeChangeCount >= MAX_TIME_CHANGE_COUNT) return;
+
+    room.timeLimit = timeLimit;
+    room.usedTimeChangeCount += 1;
+
+    io.to(roomId).emit("settings-updated", {
+      timeLimit: room.timeLimit,
+      usedTimeChangeCount: room.usedTimeChangeCount,
+    });
+
+    io.to(roomId).emit("receive-chat", {
+      socketId: "system",
+      nickname: "",
+      message: `게임시간이 ${timeLimit}초로 변경되었습니다.`,
+      type: "system",
+    });
   });
 
   /*---------WaitingRoom 준비/시작 버튼---------------*/
@@ -322,49 +371,59 @@ io.on("connection", (socket: Socket) => {
 
     player.isReady = !player.isReady;
 
-    const playerSnapshot: PlayerSnapshot[] = Array.from(
-      room.players.values(),
-    ).map((p) => ({
-      socketId: p.socketId,
-      nickname: p.nickname,
-      isOwner: p.isOwner,
-      isReady: p.isReady,
-      score: p.score,
-    }));
-
-    io.to(roomId).emit("room-updated", { players: playerSnapshot });
-
     const players = Array.from(room.players.values());
-    if (players.length < 2) return;
+    const allReady = players.every((p) => p.isReady);
 
-    const owner = players.find((p) => p.isOwner);
-    const user = players.find((p) => !p.isOwner);
+    io.to(roomId).emit("room-updated", {
+      players: players.map((p) => ({
+        socketId: p.socketId,
+        nickname: p.nickname,
+        isOwner: p.isOwner,
+        isReady: p.isReady,
+        score: p.score,
+      })),
+    });
 
-    if (owner?.isReady && user?.isReady) {
-      if (room.startTimer) {
-        clearTimeout(room.startTimer);
-
-        room.startTimer = undefined;
-      }
-      startGame(roomId, room);
-    } else if (owner?.isReady && !user?.isReady) {
-      if (!room.startTimer) {
-        room.status = "COUNTDOWN";
-        io.to(roomId).emit("countdown-start", { seconds: 5 });
-        room.startTimer = setTimeout(() => {
-          startGame(roomId, room);
-        }, 5000);
-      }
-    } else if (!owner?.isReady && room.startTimer) {
-      clearTimeout(room.startTimer);
-      room.startTimer = undefined;
-      room.status = "WAIT";
-      io.to(roomId).emit("room-wait", {
-        message: "방장이 준비를 취소했습니다.",
-      });
+    if (allReady && players.length >= 2) {
+      startCountdown(roomId, room, "ALL_READY");
     }
   });
 
+  /*---------방장 강제 시작---------------*/
+
+  socket.on("force-start-game", () => {
+    const resultData = getRoomBySocket(socket.id);
+    if (!resultData) return;
+    const { roomId, room } = resultData;
+    const player = room.players.get(socket.id);
+
+    if (player?.isOwner && room.status === "WAIT") {
+      startCountdown(roomId, room, "FORCE");
+    }
+  });
+
+  /*---------방장 강제 시작 취소---------------*/
+
+  socket.on("cancel-force-start", () => {
+    const resultData = getRoomBySocket(socket.id);
+    if (!resultData) return;
+    const { roomId, room } = resultData;
+    const player = room.players.get(socket.id);
+
+    if (player?.isOwner && room.status === "COUNTDOWN") {
+      console.log(
+        `[CANCEL START] 방장(${player.nickname})이 시작을 취소했습니다.`,
+      );
+
+      if (room.startTimer) {
+        clearTimeout(room.startTimer);
+        room.startTimer = undefined;
+      }
+
+      room.status = "WAIT";
+      io.to(roomId).emit("room-wait");
+    }
+  });
   /*---------초성 보내기---------------*/
 
   socket.on("submit-word", async (data: { word: string }) => {
@@ -375,6 +434,19 @@ io.on("connection", (socket: Socket) => {
     const { room, roomId } = resultData;
     if (room.endAt && Date.now() > room.endAt) return;
     const trimmed = word.trim();
+
+    const isAlreadyUsed = Array.from(room.usedWords).some(
+      (used) => used.word === trimmed,
+    );
+
+    if (isAlreadyUsed) {
+      return socket.emit("word-validated", {
+        word,
+        valid: false,
+        reason: "이미 사용된 단어입니다.",
+        senderId: socket.id,
+      });
+    }
 
     //2.validate
     const result = await validateWord({
@@ -394,14 +466,21 @@ io.on("connection", (socket: Socket) => {
       if (player) {
         player.score += 10;
       }
-    }
 
-    io.to(roomId).emit("word-validated", {
-      word,
-      valid: result.valid,
-      reason: result.reason,
-      senderId: socket.id,
-    });
+      socket.emit("word-validated", {
+        word,
+        valid: true,
+        reason: result.reason,
+        senderId: socket.id,
+      });
+    } else {
+      socket.emit("word-validated", {
+        word,
+        valid: false,
+        reason: result.reason,
+        senderId: socket.id,
+      });
+    }
   });
 
   /*=====================================================
@@ -418,14 +497,45 @@ io.on("connection", (socket: Socket) => {
 
     const { roomId, room } = resultData;
     const leaverId = socket.id;
+    const leaver = room.players.get(leaverId);
+
+    if (!leaver) return;
 
     //카툰트다운중 이탈 -> 취소
     if (room.status === "COUNTDOWN" && room.startTimer) {
       clearTimeout(room.startTimer);
       room.startTimer = undefined;
       room.status = "WAIT";
+    }
+
+    if (room.status === "WAIT") {
       room.players.delete(leaverId);
-      io.to(roomId).emit("room-wait", {});
+
+      if (leaver.isOwner && room.players.size > 0) {
+        const nextOwner = Array.from(room.players.values())[0];
+        if (nextOwner) {
+          nextOwner.isOwner = true;
+          nextOwner.isReady = false;
+        }
+      }
+      io.to(roomId).emit("receive-chat", {
+        socketId: "system",
+        nickname: "",
+        message: `${leaver.nickname}님이 퇴장 하였습니다.`,
+        type: "system",
+      });
+
+      const playerSnapshot = Array.from(room.players.values()).map((p) => ({
+        socketId: p.socketId,
+        nickname: p.nickname,
+        isOwner: p.isOwner,
+        isReady: p.isReady,
+        score: p.score,
+      }));
+      io.to(roomId).emit("room-updated", {
+        players: playerSnapshot,
+        status: room.status,
+      });
     } else if (room.status === "PLAY") {
       /*--------게임중 이탈 -----------*/
       if (room.gameDurationTimer) clearTimeout(room.gameDurationTimer);
@@ -446,8 +556,6 @@ io.on("connection", (socket: Socket) => {
         scores: finalScore,
       });
 
-      room.players.delete(leaverId);
-    } else {
       room.players.delete(leaverId);
     }
     // 방이 비었으면 삭제

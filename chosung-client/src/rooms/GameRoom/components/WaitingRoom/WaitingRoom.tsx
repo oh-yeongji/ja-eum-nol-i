@@ -6,29 +6,39 @@ import GameRoom from "../../GameRoom";
 import type { RoomStatus, PlayerSnapshot } from "@/types/domain/room";
 
 const WaitingRoom = () => {
+  const [showReadyPopup, setShowReadyPopup] = useState(false);
+  const [users, setUsers] = useState<PlayerSnapshot[]>([]);
+  const [myId, setMyId] = useState<string>("");
+  const [showForceStart, setShowForceStart] = useState<boolean>(false);
   const [state, setState] = useState<RoomStatus>("WAIT");
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  const [users, setUsers] = useState<PlayerSnapshot[]>([]);
-  const [myId, setMyId] = useState<string>("");
   const [chatList, setChatList] = useState<
     { socketId: string; type: string; nickname: string; message: string }[]
   >([]);
   const chatInputRef = useRef<HTMLInputElement>(null);
   const [startCountdown, setStartCountdown] = useState<number | null>(null);
+  const MAX_TIME_CHANGE_COUNT = 3;
+  const [usedTimeChangeCount, setUsedTimeChangeCount] = useState<number>(0);
+
   const times = [30, 60, 90, 120];
   const [timeIdx, setTimeIdx] = useState(1);
+  const [appliedTime, setAppliedTime] = useState<number>(60);
 
+  const [startTrigger, setStartTrigger] = useState("");
   const [isGameStarted, setIsGameStarted] = useState<boolean>(false);
   const [gameInitData, setGameInitData] = useState<any>(null);
 
-  // const [isCancel, setIsCancel] = useState<boolean>(false);
-
   const me = users?.find((u) => u.socketId === myId);
+
+  const isOwner = me?.isOwner || false;
+  const myReadyStatus = me?.isReady || false;
+
+  // const [isCancel, setIsCancel] = useState<boolean>(false);
 
   const handleSendMessage = () => {
     const message = chatInputRef.current?.value;
-    if (!me?.nickname || !message || message.trim() === "") {
+    if (!me || !me?.nickname || !message || message.trim() === "") {
       console.warn("닉네임 정보가 없거나 메시지가 비어있습니다.");
       return;
     }
@@ -46,11 +56,20 @@ const WaitingRoom = () => {
 
   console.log("WaitingRoom Render - myId:", myId, "me found:", !!me);
 
-  const isOwner = me?.isOwner || false;
-
   useEffect(() => {
     socket.on("set-my-id", ({ you }) => {
       setMyId(you);
+    });
+
+    socket.on("settings-updated", ({ timeLimit, usedTimeChangeCount }) => {
+      console.log("settings-updated 받음:", timeLimit, usedTimeChangeCount);
+
+      setAppliedTime(timeLimit);
+      setUsedTimeChangeCount(usedTimeChangeCount);
+
+      const idx = times.findIndex((t) => t === timeLimit);
+
+      if (idx !== -1) setTimeIdx(idx);
     });
 
     socket.on("receive-chat", (chatData) => {
@@ -83,7 +102,7 @@ const WaitingRoom = () => {
       intervalRef.current = setInterval(() => {
         setStartCountdown((prev) => {
           if (prev === null || prev <= 1) {
-            if (intervalRef.current) clearInterval(intervalRef.current);
+            clearInterval(intervalRef.current!);
             return null;
           }
           return prev - 1;
@@ -92,16 +111,21 @@ const WaitingRoom = () => {
     });
 
     socket.on("room-wait", () => {
+      console.log("서버로부터 중단 신호 받음");
       setState("WAIT");
+      setShowReadyPopup(false);
+      setStartCountdown(null);
+      setStartTrigger("");
+
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
       }
-      setStartCountdown(null);
     });
 
     return () => {
       socket.off("set-my-id");
+      socket.off("settings-updated");
       socket.off("receive-chat");
       socket.off("load-history");
       socket.off("room-updated");
@@ -112,26 +136,78 @@ const WaitingRoom = () => {
   }, []);
 
   useEffect(() => {
-    socket.on("game-start", (gameData) => {
-      console.log("게임 시작 데이터 수신:", gameData);
+    if (!isOwner) {
+      setShowForceStart(false);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setShowForceStart(true);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [isOwner]);
+
+  useEffect(() => {
+    if (!showReadyPopup && startCountdown === null) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (isOwner && startTrigger === "FORCE") {
+          socket.emit("cancel-force-start");
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [startCountdown, startTrigger, isOwner, showReadyPopup]);
+
+  useEffect(() => {
+    socket.on("all-ready-notice", ({ trigger }) => {
+      setStartTrigger(trigger);
+      setShowReadyPopup(true);
+    });
+
+    socket.on("countdown-start", ({ seconds }) => {
+      setShowReadyPopup(false);
+      setState("COUNTDOWN");
+      setStartCountdown(seconds);
+
       if (intervalRef.current) clearInterval(intervalRef.current);
+      intervalRef.current = setInterval(() => {
+        setStartCountdown((prev) => {
+          if (prev === null || prev <= 1) {
+            clearInterval(intervalRef.current!);
+            return null;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    });
+
+    socket.on("game-start", (game) => {
       setGameInitData({
-        ...gameData,
+        ...game,
         players: users,
         myId: myId,
       });
       setIsGameStarted(true);
     });
-    return () => {
-      socket.off("game-start");
-    };
-  }, [users]);
 
-  useEffect(() => {
-    if (isOwner) {
-      socket.emit("change-setting", { timeLimit: times[timeIdx] });
-    }
-  }, [timeIdx, isOwner]);
+    socket.on("room-wait", () => {
+      setShowReadyPopup(false);
+      setStartCountdown(null);
+      setState("WAIT");
+    });
+
+    return () => {
+      socket.off("all-ready-notice");
+      socket.off("countdown-start");
+      socket.off("game-start");
+      socket.off("room-wait");
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [users, myId]);
 
   if (isGameStarted && gameInitData) {
     return <GameRoom timeLimit={times[timeIdx]} initialData={gameInitData} />;
@@ -139,21 +215,81 @@ const WaitingRoom = () => {
 
   return (
     <div className={styles["out-of-stage"]}>
+      {showReadyPopup && (
+        <div className={styles.readyOverlay}>
+          <div className={styles.readyWrapper}>
+            <CommonHeader
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+                transform: "none",
+                margin: 0,
+              }}
+              title="준비..."
+            />
+            {startTrigger === "ALL_READY" ? (
+              <div className={styles.readyTextContainer}>
+                <p className={styles.readyText}>
+                  모든 사용자가 준비되었습니다.
+                  <br />
+                  3초 타이머 후 게임이 시작됩니다.
+                </p>
+              </div>
+            ) : (
+              <div className={styles.readyTextContainer}>
+                <p className={styles.readyText}>
+                  방장의 권한으로
+                  <br />
+                  3초 타이머 후 게임이 시작됩니다.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {startCountdown !== null && (
         <div className={styles.countdownOverlay}>
-          <div className={styles.countdownContent}>
-            <div key={startCountdown} className={styles.countdownNumber}>
-              {startCountdown}
-            </div>
+          <div className={styles.countdownWrapper}>
+            <CommonHeader
+              style={{
+                position: "relative",
+                top: 0,
+                left: 0,
+                width: "100%",
+                transform: "none",
+                margin: 0,
+              }}
+              title="데이터 동기화중..."
+            />
 
-            {isOwner && (
-              <button
-                className={styles.overlayCancelBtn}
-                onClick={() => socket.emit("toggle-ready")}
+            <div className={styles.windowContent}>
+              <p className={styles.infoText}>게임 시작까지...</p>
+              <div
+                key={`container-${startCountdown}`}
+                className={`${styles.countdownNumberContainer} ${styles.flashActive}`}
               >
-                취소 (ESC)
-              </button>
-            )}
+                <div key={startCountdown} className={styles.countdownNumber}>
+                  {startCountdown}
+                </div>
+              </div>
+
+              <div className={styles.btnGroup}>
+                <button
+                  disabled={!isOwner || startTrigger === "ALL_READY"}
+                  className={`${styles.closeBtn} ${!isOwner || startTrigger === "ALL_READY" ? styles.disabled : ""}`}
+                  onClick={() => {
+                    if (isOwner && startTrigger === "FORCE") {
+                      socket.emit("cancel-force-start");
+                    }
+                  }}
+                >
+                  취소 (Esc)
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -167,30 +303,68 @@ const WaitingRoom = () => {
         <div className={styles.stage}>
           <div className={styles.LobbySidePanel}>
             <div className={styles.settingWrapper}>
-              <p className={styles.panelTitle}>시간 설정</p>
+              <div className={styles.panelTitleContainer}>
+                <p className={styles.panelTitle}>시간 설정</p>
+                <p className={styles.panelTitle}>
+                  시간 변경 가능 횟수 :
+                  {MAX_TIME_CHANGE_COUNT - usedTimeChangeCount}회
+                </p>
+              </div>
+
               <div className={styles.settingContainer}>
-                <div
-                  className={styles.leftBtn}
-                  onClick={() => {
-                    setTimeIdx((prev) =>
-                      prev === 0 ? times.length - 1 : prev - 1,
-                    );
-                  }}
-                >
-                  ◀
+                <div className={styles.first}>
+                  <button
+                    disabled={
+                      !isOwner || usedTimeChangeCount >= MAX_TIME_CHANGE_COUNT
+                    }
+                    className={`${styles.leftBtn} ${!isOwner ? styles.disabled : ""}`}
+                    onClick={() => {
+                      setTimeIdx((prev) =>
+                        prev === 0 ? times.length - 1 : prev - 1,
+                      );
+                    }}
+                  >
+                    ◀
+                  </button>
+
+                  <div
+                    className={`${styles.timeSetting} ${times[timeIdx] === appliedTime ? styles.selectedTime : ""}`}
+                  >
+                    {times[timeIdx]}초
+                  </div>
+                  <button
+                    disabled={
+                      !isOwner || usedTimeChangeCount >= MAX_TIME_CHANGE_COUNT
+                    }
+                    className={`${styles.rightBtn} ${!isOwner ? styles.disabled : ""}`}
+                    onClick={() => {
+                      setTimeIdx((prev) =>
+                        prev === times.length - 1 ? 0 : prev + 1,
+                      );
+                    }}
+                  >
+                    ▶
+                  </button>
                 </div>
 
-                <div className={styles.timeSetting}>{times[timeIdx]}초</div>
-                <div
-                  className={styles.rightBtn}
+                <button
+                  disabled={
+                    !isOwner ||
+                    times[timeIdx] === appliedTime ||
+                    usedTimeChangeCount >= MAX_TIME_CHANGE_COUNT
+                  }
+                  className={styles.changeBtn}
                   onClick={() => {
-                    setTimeIdx((prev) =>
-                      prev === times.length - 1 ? 0 : prev + 1,
-                    );
+                    if (!isOwner) return;
+                    if (usedTimeChangeCount >= MAX_TIME_CHANGE_COUNT) return;
+
+                    socket.emit("change-setting", {
+                      timeLimit: times[timeIdx],
+                    });
                   }}
                 >
-                  ▶
-                </div>
+                  {isOwner ? "변경" : "🔒 방장전용"}
+                </button>
               </div>
             </div>
 
@@ -199,8 +373,14 @@ const WaitingRoom = () => {
               <div className={styles.userList}>
                 {users.map((user) => (
                   <div key={user.socketId} className={styles.userContainer}>
-                    <div className={styles.nickname}>
+                    <div
+                      className={styles.nickname}
+                      style={{
+                        color: user.socketId === myId ? "#2f6df6" : "#000",
+                      }}
+                    >
                       {user.isOwner ? "[방장]" : ""} {user.nickname}
+                      {user.socketId == myId ? " (당신)" : ""}
                     </div>
                     {user.isReady && (
                       <div className={styles.readyMark}>Ready</div>
@@ -209,25 +389,33 @@ const WaitingRoom = () => {
                 ))}
               </div>
             </div>
+            <button
+              disabled={!isOwner || !showForceStart}
+              className={styles.forceStart}
+              onClick={() => {
+                setStartTrigger("FORCE");
+                socket.emit("force-start-game");
+              }}
+            >
+              강제 시작
+            </button>
 
             <div
               className={`${styles.playerStatusBtn}
-              ${me?.isReady ? styles.active : ""}
-             ${users.length < 2 ? styles.disabled : ""}
+              ${myReadyStatus ? styles.active : ""}
+              ${users.length < 2 ? styles.disabled : ""}
+           
             `}
               onClick={() => {
-                if (users.length < 2) {
-                  alert("최소 게임시작인원이 부족합니다.");
-                  return;
-                }
+                if (users.length < 2) return;
                 socket.emit("toggle-ready");
               }}
             >
               {isOwner
-                ? me?.isReady
+                ? myReadyStatus
                   ? "GAME START"
                   : "READY?"
-                : me?.isReady
+                : myReadyStatus
                   ? "READY!"
                   : "READY?"}
             </div>
