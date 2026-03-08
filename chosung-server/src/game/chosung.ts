@@ -1,7 +1,19 @@
 const HANGLE_START = 0xac00;
 const HANGLE_END = 0xd7a3;
 
-const CHOSUNG_LIST = [
+const FIRST_CHOSUNG_LIST = [
+  "ㄱ",
+  "ㄴ",
+  "ㄷ",
+  "ㅁ",
+  "ㅂ",
+  "ㅅ",
+  "ㅇ",
+  "ㅈ",
+  "ㅎ",
+];
+
+const SECOND_CHOSUNG_LIST = [
   "ㄱ",
   "ㄴ",
   "ㄷ",
@@ -11,83 +23,52 @@ const CHOSUNG_LIST = [
   "ㅅ",
   "ㅇ",
   "ㅈ",
-  "ㅊ",
-  "ㅋ",
-  "ㅌ",
-  "ㅍ",
   "ㅎ",
 ];
 
 const BLACKLIST = new Set([
-  "ㅅㅋ",
-  "ㄹㄱ",
-  "ㄹㄴ",
-  "ㄹㄷ",
-  "ㄹㅅ",
-  "ㄹㅇ",
-  "ㄹㅈ",
-  "ㄹㅋ",
-  "ㄹㅌ",
-  "ㄹㅍ",
-  "ㄹㅎ",
-  "ㄹㅊ",
   "ㄴㄹ",
   "ㄷㄹ",
+  "ㅁㄹ",
   "ㅂㄹ",
-  "ㄷㅋ",
-  "ㅈㅋ",
-  "ㅇㅋ",
-  "ㅁㅋ",
-  "ㅂㅋ",
-  "ㅎㅋ",
-  "ㅁㅌ",
-  "ㅂㅌ",
-  "ㅂㅍ",
-  "ㅈㅌ",
-  "ㅎㅌ",
-  "ㅇㅍ",
-  "ㅎㅍ",
-  "ㅊㅋ",
-  "ㅊㅌ",
-  "ㅊㅍ",
-  "ㅁㅍ",
+  "ㅅㄹ",
+  "ㅇㄹ",
+  "ㅈㄹ",
+  "ㅎㄹ",
+  "ㄹㄹ",
   "ㄴㅎ",
-  "ㄹㅎ",
+  "ㄷㅎ",
   "ㅁㅎ",
   "ㅂㅎ",
-  "ㅍㄹ",
-  "ㅍㅋ",
-  "ㅋㄷ",
-  "ㅇㅍ",
-  "ㅍㅇ",
-  "ㅍㄱ",
-  "ㅍㄴ",
-  "ㅍㄷ",
-  "ㅍㄹ",
-  "ㅍㅂ",
-  "ㅍㅊ",
-  "ㅊㅍ",
-  "ㅊㄴ",
-  "ㅊㄷ",
-  "ㅊㄹ",
-  "ㅊㅎ",
-  "ㅊㄱ",
-  "ㅊㅈ",
-  "ㅋㅇ",
-  "ㅋㅁ",
-  "ㅋㅈ",
-  "ㅊㅁ",
+  "ㅅㅎ",
+  "ㅈㅎ",
+  "ㅎㅎ",
+  "ㄴㄷ",
+  "ㄴㅂ",
+  "ㄷㄴ",
+  "ㅁㄴ",
+  "ㅂㄴ",
 ]);
+
 export function getRandomChosungPair(): [string, string] {
   let first: string;
   let second: string;
   let pair: string;
 
-  do {
-    first = CHOSUNG_LIST[Math.floor(Math.random() * CHOSUNG_LIST.length)];
-    second = CHOSUNG_LIST[Math.floor(Math.random() * CHOSUNG_LIST.length)];
+  while (true) {
+    first =
+      FIRST_CHOSUNG_LIST[Math.floor(Math.random() * FIRST_CHOSUNG_LIST.length)];
+    second =
+      SECOND_CHOSUNG_LIST[
+        Math.floor(Math.random() * SECOND_CHOSUNG_LIST.length)
+      ];
     pair = first + second;
-  } while (BLACKLIST.has(pair) || first === second);
+
+    if (!BLACKLIST.has(pair)) {
+      break;
+    }
+  }
+
   return [first, second];
 }
 
@@ -118,6 +99,7 @@ export function extractTwoChosungs(word: string): [string, string] | null {
 
   for (const char of word) {
     const code = char.charCodeAt(0);
+
     if (code < HANGLE_START || code > HANGLE_END) continue;
 
     const index = Math.floor((code - HANGLE_START) / 588);
