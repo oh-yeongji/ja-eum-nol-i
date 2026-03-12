@@ -32,6 +32,7 @@ const ResultModal = ({
     me.score === opponent.score;
 
   const getCardStyle = (p: typeof me, other: typeof opponent) => {
+    if (other.isLeaver) return { width: "60%", height: "240px" };
     if (isDraw) return { width: "45%", height: "200px" };
 
     if (other.isLeaver) return { width: "60%", height: "240px" };
