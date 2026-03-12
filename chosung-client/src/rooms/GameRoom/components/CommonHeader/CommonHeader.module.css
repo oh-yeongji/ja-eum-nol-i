@@ -53,3 +53,9 @@
   padding-left: 1px;
   padding-bottom: 0px;
 }
+
+.closeBtn:disabled {
+  color: #808080;
+  pointer-events: none;
+  cursor: default;
+}

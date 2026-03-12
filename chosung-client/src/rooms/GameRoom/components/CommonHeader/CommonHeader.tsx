@@ -4,12 +4,22 @@ interface CommonHeaderProps {
   title: string;
   style?: React.CSSProperties;
   onClose?: () => void;
+  isCloseDisabled?: boolean;
 }
-const CommonHeader = ({ title, style, onClose }: CommonHeaderProps) => {
+const CommonHeader = ({
+  title,
+  style,
+  onClose,
+  isCloseDisabled,
+}: CommonHeaderProps) => {
   return (
     <div className={styles.header} style={style}>
       <span className={styles.titleName}>{title}</span>
-      <button className={styles.closeBtn} onClick={onClose}>
+      <button
+        className={styles.closeBtn}
+        onClick={onClose}
+        disabled={isCloseDisabled}
+      >
         X
       </button>
     </div>
