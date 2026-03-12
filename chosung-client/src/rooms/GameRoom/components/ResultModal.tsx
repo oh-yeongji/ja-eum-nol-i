@@ -20,39 +20,39 @@ const ResultModal = ({
   words = [],
   onReset,
 }: ResultModalProps) => {
-  const sortedScores = [...scores].sort((a, b) => {
-    if (a.isLeaver !== b.isLeaver) {
-      return a.isLeaver ? 1 : -1;
-    }
-
-    return b.score - a.score;
-  });
-  const winner = sortedScores[0];
-  const loser = sortedScores[1] || null;
+  const myId = socket?.id;
+  const me = scores.find((s) => s.socketId === myId) || scores[0];
+  const opponent = scores.find((s) => s.socketId !== myId) || scores[1];
 
   const isDraw =
-    winner &&
-    loser &&
-    !winner.isLeaver &&
-    !loser.isLeaver &&
-    winner.score === loser.score;
+    me &&
+    opponent &&
+    !me.isLeaver &&
+    !opponent.isLeaver &&
+    me.score === opponent.score;
 
-  const winnerWords = winner
-    ? words.filter((w) => w.senderId === winner.socketId)
-    : [];
-  const loserWords = loser
-    ? words.filter((w) => w.senderId === loser?.socketId)
-    : [];
+  const getCardStyle = (p: typeof me, other: typeof opponent) => {
+    if (isDraw) return { width: "45%", height: "200px" };
 
-  const cleanWinnerName = winner?.nickname.replace("(이탈)", "");
-  const cleanLoserName = loser?.nickname.replace("(이탈)", "");
+    if (other.isLeaver) return { width: "60%", height: "240px" };
+    if (p.isLeaver) return { width: "30%", height: "180px" };
+
+    if (p.score > other.score) {
+      return { width: "50%", height: "220px" };
+    } else {
+      return { width: "40%", height: "180px" };
+    }
+  };
+
+  const myWords = words.filter((w) => w.senderId === me?.socketId);
+  const opWords = opponent
+    ? words.filter((w) => w.senderId === opponent.socketId)
+    : [];
 
   const handleRetry = () => {
     if (!socket) return;
-
     socket.emit("join-room");
     onReset();
-    console.log("재입장 시도 (기존 연결 유지) ");
   };
 
   const handleExit = () => {
@@ -87,7 +87,7 @@ const ResultModal = ({
     >
       <div
         style={{
-          background: loser?.isLeaver
+          background: opponent?.isLeaver
             ? "#008080"
             : isDraw
               ? "#000000"
@@ -99,17 +99,16 @@ const ResultModal = ({
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-
-          borderBottom: loser?.isLeaver ? "2px solid #FFD700" : "none",
+          borderBottom: opponent?.isLeaver ? "2px solid #FFD700" : "none",
         }}
       >
         <span
           style={{
-            color: loser?.isLeaver ? "#FFD700" : "#ffffff",
+            color: opponent?.isLeaver ? "#FFD700" : "#ffffff",
             fontWeight: "bold",
           }}
         >
-          {loser?.isLeaver
+          {opponent?.isLeaver
             ? "🏆 [FORFEIT_WIN]: 축하합니다! 당신의 끈기 있는 플레이로 승리를 쟁취했습니다!"
             : isDraw
               ? "⚠ SYSTEM_ERROR: 패자를 찾지 못했습니다!"
@@ -126,7 +125,6 @@ const ResultModal = ({
               fontSize: "10px",
               textAlign: "center",
               lineHeight: "12px",
-              cursor: "default",
             }}
           >
             _
@@ -141,7 +139,6 @@ const ResultModal = ({
               fontSize: "10px",
               textAlign: "center",
               lineHeight: "12px",
-              cursor: "default",
             }}
           >
             X
@@ -154,94 +151,127 @@ const ResultModal = ({
           display: "flex",
           background: "#C0C0C0",
           justifyContent: "space-around",
+          alignItems: "center",
           padding: "10px",
           borderTop: "2px solid #ffffff",
           borderLeft: "2px solid #ffffff",
           borderRight: "2px solid #808080",
           borderBottom: "2px solid #808080",
           flexShrink: 0,
+          gap: "10px",
+          minHeight: "260px",
         }}
       >
         <div
           style={{
             background: "#C0C0C0",
-            width: "45%",
+            width: getCardStyle(me, opponent).width,
+            height: getCardStyle(me, opponent).height,
             padding: "2px",
             borderTop: "2px solid #808080",
             borderLeft: "2px solid #808080",
             borderRight: "2px solid #ffffff",
             borderBottom: "2px solid #ffffff",
+            transition: "all 0.3s ease",
+            display: "flex",
+            flexDirection: "column",
           }}
         >
           <div
             style={{
-              background: "linear-gradient(90deg, #0000A0 0%, #0000FF 100%)",
+              background:
+                me.score >= opponent.score && !me.isLeaver
+                  ? "linear-gradient(90deg, #0000A0 0%, #0000FF 100%)"
+                  : "#808080",
               color: "white",
               padding: "4px 10px",
-              textAlign: "left",
               fontFamily: "'Galmuri9', sans-serif",
               fontSize: "14px",
               display: "flex",
               justifyContent: "space-between",
             }}
           >
-            <span>{isDraw ? "Co-Winner.exe" : "Winner.exe"}</span>
-            <span>🏆</span>
+            <span>
+              {isDraw
+                ? "Co-Winner.exe"
+                : me.score > opponent.score || opponent?.isLeaver
+                  ? "Winner.exe"
+                  : "Loser.log"}
+            </span>
+            <span>
+              {(() => {
+                if (isDraw || me.score > opponent.score || opponent?.isLeaver) {
+                  return "🏆";
+                }
+
+                return "🥈";
+              })()}
+            </span>
           </div>
           <ul
             style={{
               listStyle: "none",
-              padding: "20px",
+              padding: "10px",
               margin: 0,
               textAlign: "center",
               background: "#fff",
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
             }}
           >
             <li
               style={{
-                fontSize: "28px",
+                fontSize:
+                  getCardStyle(me, opponent).height === "240px"
+                    ? "36px"
+                    : "28px",
                 color: "#000",
                 fontFamily: "'Galmuri9', sans-serif",
-                textShadow: "1px 1px 0 #ccc",
               }}
             >
-              {winner?.nickname}
+              {me.nickname}
             </li>
             <li
               style={{
-                fontSize: "22px",
+                fontSize: "24px",
                 fontWeight: "bold",
-                color: "#ff0000",
-                marginTop: "5px",
+                color: me.score < opponent.score ? "#808080" : "#ff0000",
+                marginTop: "10px",
                 fontFamily: "'Galmuri9', sans-serif",
               }}
             >
-              {winner?.score} PTS
+              {me.score} PTS
             </li>
           </ul>
         </div>
 
-        {loser && (
+        {opponent && (
           <div
             style={{
               background: "#C0C0C0",
-              width: "45%",
+              width: getCardStyle(opponent, me).width,
+              height: getCardStyle(opponent, me).height,
               padding: "2px",
-              opacity: loser.isLeaver ? 0.7 : 1,
+              opacity: opponent.isLeaver ? 0.7 : 1,
               borderTop: "2px solid #808080",
               borderLeft: "2px solid #808080",
               borderRight: "2px solid #ffffff",
               borderBottom: "2px solid #ffffff",
+              transition: "all 0.3s ease",
+              display: "flex",
+              flexDirection: "column",
             }}
           >
             <div
               style={{
-                background: isDraw
-                  ? "linear-gradient(90deg, #0000A0 0%, #0000FF 100%)"
-                  : "#808080",
-                color: isDraw ? "white" : "#C0C0C0",
+                background:
+                  isDraw || (opponent.score > me.score && !opponent.isLeaver)
+                    ? "linear-gradient(90deg, #0000A0 0%, #0000FF 100%)"
+                    : "#808080",
+                color: "white",
                 padding: "4px 10px",
-                textAlign: "left",
                 fontFamily: "'Galmuri9', sans-serif",
                 fontSize: "14px",
                 display: "flex",
@@ -249,42 +279,70 @@ const ResultModal = ({
               }}
             >
               <span>
-                {isDraw ? "Co-Winner.exe" : "Loser.log"}
-                {loser.isLeaver && "🚩"}
+                {isDraw
+                  ? "Co-Winner.exe"
+                  : opponent.score > me.score
+                    ? "Winner.exe"
+                    : "Loser.log"}
+                {opponent.isLeaver && "🏳️"}
               </span>
-              <span>{isDraw ? "🏆" : "🥈"}</span>
+              <span>
+                {(() => {
+                  if (
+                    isDraw ||
+                    (opponent.score > me.score && !opponent.isLeaver)
+                  ) {
+                    return "🏆";
+                  }
+
+                  if (opponent.isLeaver) {
+                    return "👎";
+                  }
+
+                  return "🥈";
+                })()}
+              </span>
             </div>
             <ul
               style={{
                 listStyle: "none",
-                padding: "20px",
+                padding: "10px",
                 margin: 0,
                 textAlign: "center",
-                background: loser.isLeaver ? "#e0e0e0" : "#fff",
+                background: opponent.isLeaver ? "#e0e0e0" : "#fff",
+                flex: 1,
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
               }}
             >
               <li
                 style={{
-                  fontSize: isDraw ? "28px" : "24px",
+                  fontSize:
+                    getCardStyle(opponent, me).height === "240px"
+                      ? "36px"
+                      : "24px",
                   color: isDraw ? "#000" : "#555",
                   fontFamily: "'Galmuri9', sans-serif",
                 }}
               >
-                {loser.nickname}
-                {loser.isLeaver}
+                {opponent.nickname}
               </li>
               <li
                 style={{
-                  fontSize: isDraw ? "22px" : "20px",
-                  marginTop: "5px",
-                  padding: loser.isLeaver ? "2px 10px" : "0",
-                  background: loser.isLeaver ? "#404040" : "transparent",
-                  color: loser.isLeaver ? "#808080" : "#808080",
-                  textDecoration: loser.isLeaver ? "line-through" : "none",
+                  fontSize: "24px",
+                  fontWeight: "bold",
+                  marginTop: "10px",
+                  color: opponent.isLeaver
+                    ? "#808080"
+                    : isDraw || opponent.score > me.score
+                      ? "#ff0000"
+                      : "#808080",
+                  textDecoration: opponent.isLeaver ? "line-through" : "none",
                   fontFamily: "'Galmuri9', sans-serif",
                 }}
               >
-                {loser.score} PTS
+                {opponent.score} PTS
               </li>
             </ul>
           </div>
@@ -315,11 +373,11 @@ const ResultModal = ({
               fontFamily: "'Galmuri9', sans-serif",
             }}
           >
-            {cleanWinnerName} 단어장
+            내 단어장
           </h3>
           <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-            {winnerWords.length > 0 ? (
-              winnerWords.map((item, idx) => (
+            {myWords.length > 0 ? (
+              myWords.map((item, idx) => (
                 <li
                   key={idx}
                   style={{
@@ -380,14 +438,13 @@ const ResultModal = ({
             )}
           </ul>
         </div>
-
         <div
           style={{
             flex: 1,
             overflowY: "auto",
             margin: "25px 10px",
             padding: "15px",
-            background: loser?.isLeaver ? "#ececec" : "#f9fafb",
+            background: opponent?.isLeaver ? "#ececec" : "#f9fafb",
             border: "2px solid #808080",
             borderRightColor: "#fff",
             borderBottomColor: "#fff",
@@ -401,16 +458,16 @@ const ResultModal = ({
               fontFamily: "'Galmuri9', sans-serif",
             }}
           >
-            {cleanLoserName} 단어장 {loser?.isLeaver}
+            상대 단어장
           </h3>
           <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-            {loserWords.length > 0 ? (
-              loserWords.map((item, idx) => (
+            {opWords.length > 0 ? (
+              opWords.map((item, idx) => (
                 <li
                   key={idx}
                   style={{
                     marginBottom: "10px",
-                    opacity: loser?.isLeaver ? 0.6 : 1,
+                    opacity: opponent?.isLeaver ? 0.6 : 1,
                     background: "#fff",
                     borderTop: "2px solid #dfdfdf",
                     borderLeft: "2px solid #dfdfdf",
