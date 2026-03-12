@@ -3,7 +3,6 @@ import { createServer } from "http";
 import cors from "cors";
 import { Server, Socket } from "socket.io";
 import path from "path";
-// import { fileURLToPath } from "url";
 import { connectDB } from "./config/db";
 import { Chat } from "./models/Chat";
 import { randomUUID } from "crypto";
@@ -15,7 +14,6 @@ import type { Room, UsedWord, Player, PlayerSnapshot } from "./types";
 
 const app = express();
 
-//express cors
 app.use(
   cors({
     origin: [
@@ -31,14 +29,10 @@ app.use(express.json());
 
 app.use("/api", gameRouter);
 
-const distPath = path.join(process.cwd(), "..", "chosung-client", "dist");
-app.use(express.static(distPath));
-
 const httpServer = createServer(app);
 
 connectDB();
 
-//socket cors
 const io = new Server(httpServer, {
   cors: {
     origin: [
@@ -53,23 +47,29 @@ const io = new Server(httpServer, {
   transports: ["polling", "websocket"],
 });
 
-app.get(/.*/, (req, res) => {
-  if (!req.path.startsWith("/api") && !req.path.startsWith("/socket.io")) {
-    res.sendFile(path.join(distPath, "index.html"), (err) => {
-      if (err) {
-        res.status(404).send("Front-end build not found.");
-      }
-    });
-  }
-});
-
-/*==============================================================
+/*==========================================app.use===================
         
          방 상태, 플레이어 설정
 
 =======================================================*/
 
 const rooms = new Map<string, Room>();
+
+/*==========================================================================
+        
+      전체방 닉네임 중복 체크
+
+============================================================================*/
+const isNicknameTaken = (nickname: string) => {
+  for (const room of rooms.values()) {
+    for (const player of room.players.values()) {
+      if (player.nickname === nickname) {
+        return true;
+      }
+    }
+  }
+  return false;
+};
 
 /*==========================================================================
         
@@ -202,17 +202,41 @@ const startCountdown = (
 
 ================================================================================ */
 
-let tempNumber = 0;
 io.on("connection", (socket: Socket) => {
-  console.log(`[CONNECT] 신규 접속: ${socket.id}`);
-  /* ---------- 방 참가 ---------- */
-  socket.on("join-room", async () => {
-    console.log(`[JOIN-ROOM] 유저가 방 참가를 요청함: ${socket.id}`);
+  socket.on("check-nickname", ({ nickname }) => {
+    if (!nickname) {
+      return socket.emit("nickname-error", {
+        message: "닉네임 정보가 없습니다.",
+      });
+    }
+
+    const trimmedNickname = nickname.trim();
+
+    const nicknameRegex = /^[가-힣a-zA-Z0-9\-_*]{2,8}$/;
+
+    if (!nicknameRegex.test(trimmedNickname)) {
+      return socket.emit("nickname-check-result", {
+        available: false,
+        message: "한글/영문 2~8자, 특수문자(-, _, *)만 가능합니다.",
+      });
+    }
+
+    const taken = isNicknameTaken(trimmedNickname);
+
+    // 3. 결과 반환
+    socket.emit("nickname-check-result", {
+      available: !taken,
+      nickname: trimmedNickname,
+      message: taken
+        ? "중복된 닉네임(별호) 입니다."
+        : "사용 가능한 닉네임(별호) 입니다.",
+    });
+  });
+
+  socket.on("join-room", async (data) => {
     const already = getRoomBySocket(socket.id);
     if (already) return;
 
-    // 1. 들어갈 방(WAIT상태의 방) 있는지 확인
-    // 키 값 한 쌍 => entry
     let entry = [...rooms.entries()].find(
       ([_, room]) => room.status === "WAIT" && room.players.size < 2,
     );
@@ -220,40 +244,36 @@ io.on("connection", (socket: Socket) => {
     let roomId: string;
     let room: Room;
 
-    // 2. 들어갈방 없으면 새방 생성
+    if (!data || !data.nickname) {
+      return socket.emit("nickname-error", {
+        message: "닉네임 정보가 없습니다.",
+      });
+    }
+    const trimmedNickname = data.nickname.trim();
+
     if (!entry) {
       const created = createRoom();
 
       roomId = created.roomId;
       room = created.room;
     } else {
-      // 3. entry 구조분해
       [roomId, room] = entry;
     }
 
-    // 4. 플레이어 추가
-    tempNumber++;
-    const tempNickname = `player${tempNumber}`;
     const firstPlayer = room.players.size === 0;
 
     room.players.set(socket.id, {
       socketId: socket.id,
-      nickname: tempNickname,
-      roomId, //지금구조에서 역추적 불가해서 여기 저장
+      nickname: trimmedNickname,
+      roomId,
       isOwner: firstPlayer,
       isReady: false,
       score: 0,
     });
 
-    try {
-      const systemMsg = new Chat({
-        roomId,
-        sender: "system",
-        message: `${tempNickname}님이 입장 하였습니다.`,
-        type: "system",
-      });
-      await systemMsg.save();
+    socket.join(roomId);
 
+    try {
       const history = await Chat.find({
         roomId,
       })
@@ -268,19 +288,17 @@ io.on("connection", (socket: Socket) => {
       }));
 
       socket.emit("load-history", mappedHistory);
+
+      io.to(roomId).emit("receive-chat", {
+        socketId: "system",
+        nickname: "",
+        message: `${trimmedNickname}님이 입장하였습니다.`,
+        type: "system",
+      });
     } catch (err) {
       console.error("DB저장 실패:", err);
       socket.emit("load-history", []);
     }
-
-    socket.join(roomId);
-
-    socket.broadcast.to(roomId).emit("receive-chat", {
-      socketId: "system",
-      nickname: "",
-      message: `${tempNickname}님이 입장했습니다.`,
-      type: "system",
-    });
 
     const playerSnapshot: PlayerSnapshot[] = Array.from(
       room.players.values(),
@@ -448,7 +466,6 @@ io.on("connection", (socket: Socket) => {
       });
     }
 
-    //2.validate
     const result = await validateWord({
       chosungPair: room.chosungPair,
       word: trimmed,
@@ -467,11 +484,18 @@ io.on("connection", (socket: Socket) => {
         player.score += 10;
       }
 
-      socket.emit("word-validated", {
-        word,
+      io.to(roomId).emit("word-validated", {
+        word: trimmed,
         valid: true,
         reason: result.reason,
         senderId: socket.id,
+        nickname: player?.nickname,
+
+        players: Array.from(room.players.values()).map((p) => ({
+          socketId: p.socketId,
+          nickname: p.nickname,
+          score: p.score,
+        })),
       });
     } else {
       socket.emit("word-validated", {
@@ -521,7 +545,7 @@ io.on("connection", (socket: Socket) => {
       io.to(roomId).emit("receive-chat", {
         socketId: "system",
         nickname: "",
-        message: `${leaver.nickname}님이 퇴장 하였습니다.`,
+        message: `${leaver.nickname}님이 퇴장하였습니다.`,
         type: "system",
       });
 
