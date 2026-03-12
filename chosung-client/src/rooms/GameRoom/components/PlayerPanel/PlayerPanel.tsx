@@ -16,17 +16,18 @@ const PlayerPanel = ({ nickname, words }: PlayerPanelProps) => {
 
   return (
     <div className={styles.playerWrapper}>
-      <div className={styles.nicknameContainer}>
-        <div className={styles.nickname}>{nickname}</div>
-        <button className={styles.editBtn}>변경</button>
-      </div>
+      <div className={styles.playerContainer}>
+        <div className={styles.nicknameContainer}>
+          <div className={styles.nickname}>{nickname}</div>
+        </div>
 
-      <div className={styles.wordListContainer} ref={scrollRef}>
-        {words.map((word, idx) => (
-          <div className={styles.wordItem} key={idx}>
-            {word}
-          </div>
-        ))}
+        <div className={styles.wordListContainer} ref={scrollRef}>
+          {words.map((word, idx) => (
+            <div className={styles.wordItem} key={idx}>
+              {word}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
