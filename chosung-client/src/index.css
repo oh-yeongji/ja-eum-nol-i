@@ -18,8 +18,8 @@ body {
   position: fixed;
   top: 0;
   left: 0;
-  background: #008080 radial-gradient(#000000 1px, transparent 0);
-  background-size: 3px 3px;
+  background: #008080 radial-gradient(rgba(0, 0, 0, 0.3) 1px, transparent 1px);
+  background-size: 4px 4px;
   overflow: hidden;
 }
 
