@@ -4,8 +4,10 @@ import styles from "./WaitingRoom.module.css";
 import CommonHeader from "../CommonHeader/CommonHeader";
 import GameRoom from "../../GameRoom";
 import type { RoomStatus, PlayerSnapshot } from "@/types/domain/room";
-
-const WaitingRoom = () => {
+interface WaitingRoomProps {
+  onClose: () => void;
+}
+const WaitingRoom = ({ onClose }: WaitingRoomProps) => {
   const [showReadyPopup, setShowReadyPopup] = useState(false);
   const [users, setUsers] = useState<PlayerSnapshot[]>([]);
   const [myId, setMyId] = useState<string>("");
@@ -16,6 +18,7 @@ const WaitingRoom = () => {
   const [chatList, setChatList] = useState<
     { socketId: string; type: string; nickname: string; message: string }[]
   >([]);
+
   const chatInputRef = useRef<HTMLInputElement>(null);
   const [startCountdown, setStartCountdown] = useState<number | null>(null);
   const MAX_TIME_CHANGE_COUNT = 3;
@@ -33,8 +36,6 @@ const WaitingRoom = () => {
 
   const isOwner = me?.isOwner || false;
   const myReadyStatus = me?.isReady || false;
-
-  // const [isCancel, setIsCancel] = useState<boolean>(false);
 
   const handleSendMessage = () => {
     const message = chatInputRef.current?.value;
@@ -299,16 +300,19 @@ const WaitingRoom = () => {
             position: "absolute",
           }}
           title="자음놀이 (대기방)"
+          onClose={onClose}
         />
         <div className={styles.stage}>
           <div className={styles.LobbySidePanel}>
             <div className={styles.settingWrapper}>
               <div className={styles.panelTitleContainer}>
                 <p className={styles.panelTitle}>시간 설정</p>
-                <p className={styles.panelTitle}>
-                  시간 변경 가능 횟수 :
-                  {MAX_TIME_CHANGE_COUNT - usedTimeChangeCount}회
-                </p>
+                {isOwner && (
+                  <p className={styles.panelTitle}>
+                    시간 변경 가능 횟수:
+                    {MAX_TIME_CHANGE_COUNT - usedTimeChangeCount}회
+                  </p>
+                )}
               </div>
 
               <div className={styles.settingContainer}>
@@ -370,6 +374,7 @@ const WaitingRoom = () => {
 
             <div className={styles.userListWrapper}>
               <p className={styles.panelTitle}>입장 유저목록</p>
+
               <div className={styles.userList}>
                 {users.map((user) => (
                   <div key={user.socketId} className={styles.userContainer}>
@@ -389,6 +394,7 @@ const WaitingRoom = () => {
                 ))}
               </div>
             </div>
+
             <button
               disabled={!isOwner || !showForceStart}
               className={styles.forceStart}
@@ -430,7 +436,7 @@ const WaitingRoom = () => {
                 <div key={idx} className={styles.chatContainer}>
                   {isSystem ? (
                     <div className={styles.systemMsg}>
-                      <span className={styles.systemTag}>[시스템]</span>
+                      <span className={styles.systemTag}>{">>> [시스템]"}</span>
                       <span className={styles.systemChat}>{chat.message}</span>
                     </div>
                   ) : (
