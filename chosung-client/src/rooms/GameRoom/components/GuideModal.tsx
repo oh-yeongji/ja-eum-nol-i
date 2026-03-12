@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import CommonHeader from "./CommonHeader/CommonHeader";
+import NicknameModal from "./NicknameModal/NicknameModal";
 
 interface GuideModalProps {
   initialSkip: boolean;
@@ -62,7 +63,11 @@ const GuideModal = ({
   return (
     <div style={styles.overlay}>
       <div style={styles[`main-window`]}>
-        <CommonHeader title="[정보] 도움말 - Help.exe" onClose={onClose} />
+        <CommonHeader
+          title="[정보] 도움말 - Help.exe"
+          onClose={onClose}
+          style={{ margin: "0px" }}
+        />
 
         <div style={styles.contentContainer}>
           <h2 style={styles.header}>※ 자음 놀이 이용 안내 ※</h2>
@@ -82,10 +87,6 @@ const GuideModal = ({
                 기본 대결 시간은 60초이며, 방장(첫입장자)의 설정에 따라
                 30/60/90/120초로 가변 가능합니다. 시간 변경 가능 횟수는 3회
                 입니다.
-              </>,
-              <>
-                별호(닉네임) 변경은 일일 1회로 제한되오니 신중을 기해주시기
-                바랍니다.
               </>,
             ].map((content, index) => (
               <div

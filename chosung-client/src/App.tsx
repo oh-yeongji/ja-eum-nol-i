@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { socket } from "@/socket/socket";
-import GameRoom from "./rooms/GameRoom/GameRoom";
 import GuideModal from "./rooms/GameRoom/components/GuideModal";
+import NicknameModal from "./rooms/GameRoom/components/NicknameModal/NicknameModal";
 import type { RoomStatus } from "types/domain/room";
 import "./index.css";
 import WaitingRoom from "./rooms/GameRoom/components/WaitingRoom/WaitingRoom";
@@ -11,24 +11,33 @@ const App = () => {
   const [connected, setConnected] = useState(false);
   const [currentTime, setCurrentTime] = useState("");
   const [status, setStatus] = useState<RoomStatus>("WAIT");
-  const [showGuide, setShowGuide] = useState(false);
+  const [showfirstWindow, setShowFirstWindow] = useState<boolean>(true);
+  const [entered, setEntered] = useState(false);
+  const hasJoinedRef = useRef(false);
   const [skip, setSkip] = useState(() => {
     return localStorage.getItem("skipGuide") === "true";
   });
-  const [entered, setEntered] = useState(false);
-  const hasJoinedRef = useRef(false);
+  const [activeModal, setActiveModal] = useState<"guide" | "nickname" | "none">(
+    "none",
+  );
 
-  const handleConfirm = (skipChecked: boolean) => {
+  const handleGuideConfirm = (skipChecked: boolean) => {
     setSkip(skipChecked);
     if (skipChecked) {
       localStorage.setItem("skipGuide", "true");
     }
-    enterGameRoom();
+    setActiveModal("nickname");
   };
 
-  const handleClose = () => {
-    setShowGuide(false);
+  const handleNicknameConfirm = (nickname: string) => {
+    if (!nickname || nickname.trim() === "") return;
+
+    console.log("설정된 닉네임:", nickname);
+    socket.emit("join-room", { nickname: nickname.trim() });
+    setActiveModal("none");
+    setEntered(true);
   };
+
   useEffect(() => {
     const currentClock = () => {
       const now = new Date();
@@ -46,19 +55,22 @@ const App = () => {
   }, []);
 
   const handleEnterClick = () => {
-    const skip = localStorage.getItem("skipGuide") === "true";
-    if (skip) {
-      enterGameRoom(true);
-    } else {
-      setShowGuide(true);
+    if (!socket.connected) {
+      socket.connect();
     }
+
+    if (skip) {
+      setActiveModal("nickname");
+    } else {
+      setActiveModal("guide");
+    }
+    setShowFirstWindow(false);
   };
 
   const enterGameRoom = (skipChecked?: boolean) => {
     if (skipChecked) localStorage.setItem("skipGuide", "true");
     if (!entered) {
       setEntered(true);
-      setShowGuide(false);
     }
   };
 
@@ -77,65 +89,73 @@ const App = () => {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Enter" && !entered && !showGuide) {
+      if (e.key === "Enter" && !entered) {
         handleEnterClick();
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [entered, showGuide]);
-
-  useEffect(() => {
-    if (!connected || !entered) return;
-    if (hasJoinedRef.current) return;
-    socket.emit("join-room");
-    hasJoinedRef.current = true;
-  }, [connected, entered]);
+  }, [entered]);
 
   return (
     <div className="desktop-screen">
-      {!entered && (
-        <div className="main-window">
-          <CommonHeader title="설치 프로그램: 자음놀이 (v1.0.2)" />
+      {!entered && activeModal === "none" && (
+        <>
+          <div className="main-window">
+            <CommonHeader
+              title="설치 프로그램: 자음놀이 (v1.0.2)"
+              isCloseDisabled={true}
+            />
 
-          <div className="window-content">
-            <h2 className="title1">세기말</h2>
-            <div className="app-identity">
-              <h1 className="title2">자음 놀이</h1>
-              <span className="versionName">v 1.0.2</span>
-            </div>
-            <div>
-              {!showGuide && (
-                <button className="enterRoom" onClick={handleEnterClick}>
-                  방 입장하기
-                </button>
-              )}
+            <div className="window-content">
+              <h2 className="title1">세기말</h2>
+              <div className="app-identity">
+                <h1 className="title2">자음 놀이</h1>
+                <span className="versionName">v 1.0.2</span>
+              </div>
+              <div>
+                {activeModal === "none" && (
+                  <button className="enterRoom" onClick={handleEnterClick}>
+                    방 입장하기
+                  </button>
+                )}
+              </div>
             </div>
           </div>
-        </div>
+
+          <div className="taskbar">
+            <button className="systemStartBtn">시작</button>
+
+            <div className="system-tray">{currentTime}</div>
+          </div>
+        </>
       )}
 
-      {!entered && (
-        <div className="taskbar">
-          <button className="systemStartBtn">시작</button>
-
-          <div className="system-tray">{currentTime}</div>
-        </div>
-      )}
-
-      {showGuide && (
+      {activeModal === "guide" && (
         <GuideModal
           initialSkip={skip}
           onToggle={setSkip}
-          onConfirm={handleConfirm}
-          onClose={handleClose}
+          onConfirm={handleGuideConfirm}
+          onClose={() => setActiveModal("none")}
+        />
+      )}
+
+      {activeModal === "nickname" && (
+        <NicknameModal
+          onClose={() => setActiveModal("none")}
+          onConfirm={handleNicknameConfirm}
         />
       )}
 
       {entered && (
-        <div className="game-room-wrapper">
-          <WaitingRoom />
-        </div>
+        <WaitingRoom
+          onClose={() => {
+            setEntered(false);
+            setActiveModal("none");
+            setShowFirstWindow(true);
+            socket.disconnect();
+          }}
+        />
       )}
     </div>
   );
