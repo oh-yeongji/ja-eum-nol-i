@@ -225,6 +225,7 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+  min-height: 0;
 }
 .userList {
   flex: 1;
@@ -234,7 +235,8 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  min-height: 0;
+  min-width: 0;
+  min-height: 120px;
 }
 .userContainer {
   display: flex;
@@ -250,6 +252,7 @@
   font-size: 14px;
   color: #000;
   font-weight: bold;
+  cursor: pointer;
 }
 
 .readyMark {
@@ -280,7 +283,6 @@
   background-color: #990000;
   color: #ffffff;
   font-family: "Seogung", sans-serif;
-  font-weight: 1500;
   font-size: 22px;
   letter-spacing: 2px;
   letter-spacing: 2px;
@@ -361,7 +363,7 @@
 }
 
 .chatContainer {
-  margin: 3px 5px;
+  margin: 3px 10px;
 }
 
 .systemMsg {
@@ -378,6 +380,7 @@
 }
 
 .userMsg {
+  font-family: "Galmuri9", sans-serif;
   display: flex;
   align-items: center;
 }
