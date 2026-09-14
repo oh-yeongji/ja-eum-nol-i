@@ -1,11 +1,14 @@
 import { useState, useEffect, useRef } from "react";
+import "@fontsource/gowun-batang/700.css";
+
 import { socket } from "@/socket/socket";
 import GuideModal from "./rooms/GameRoom/components/GuideModal";
 import NicknameModal from "./rooms/GameRoom/components/NicknameModal/NicknameModal";
 import type { RoomStatus } from "./types/domain/room";
-import "./index.css";
 import WaitingRoom from "./rooms/GameRoom/components/WaitingRoom/WaitingRoom";
 import CommonHeader from "./rooms/GameRoom/components/CommonHeader/CommonHeader";
+
+import "./index.css";
 
 const App = () => {
   const [connected, setConnected] = useState(false);
