@@ -1,3 +1,11 @@
+@font-face {
+  font-family: "KoPubWorld Batang";
+  src: url("./assets/fonts/KoPub-Batang-Medium.woff") format("woff");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
 html,
 body {
   margin: 0;
@@ -72,9 +80,9 @@ body {
   font-family: Galmuri9, serif;
 }
 .title2 {
-  font-family: "Gowun Batang", "Batang", "바탕", serif;
+  font-family: "KoPubWorld Batang", "Batang", "바탕", serif;
   font-size: 4rem;
-  font-weight: 700;
+  font-weight: 500;
   line-height: 1;
   margin: 10px 0 0 0;
 }

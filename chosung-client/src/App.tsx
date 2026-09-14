@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-import "@fontsource/gowun-batang/700.css";
 
 import { socket } from "@/socket/socket";
 import GuideModal from "./rooms/GameRoom/components/GuideModal";

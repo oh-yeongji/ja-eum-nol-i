@@ -1,3 +1,11 @@
+@font-face {
+  font-family: "KoPubWorld Batang";
+  src: url("./assets/fonts/KoPub-Batang-Medium.woff") format("woff");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
 .header {
   display: flex;
   justify-content: space-between;
@@ -13,15 +21,15 @@
   z-index: 10;
 }
 .titleName {
-  text-rendering: geometricPrecision;
-  letter-spacing: -0.5px;
-  font-family: "Gowun Batang", "Batang", "바탕", serif;
-  -webkit-font-smoothing: none;
+  font-family: "KoPubWorld Batang", "Batang", "바탕", serif;
+  font-weight: 500;
   font-size: 14px;
-  -moz-osx-font-smoothing: grayscale;
-  margin-left: 4px;
   color: #fff;
-  font-weight: 700;
+  letter-spacing: -0.5px;
+  margin-left: 4px;
+  text-rendering: geometricPrecision;
+  -webkit-font-smoothing: none;
+  -moz-osx-font-smoothing: grayscale;
 }
 .closeBtn {
   display: flex;
@@ -29,29 +37,23 @@
   align-items: center;
   width: 20px;
   height: 18px;
+  font-size: 12px;
   background: #c0c0c0;
   color: #000;
   font-family: "MS Sans Serif", sans-serif;
+  box-sizing: border-box;
   font-weight: bold;
   border: 2px solid;
+  padding: 0 0 1px 0;
   border-color: #ffffff #808080 #808080 #ffffff;
   cursor: pointer;
-
   font-family: "Galmuri9", sans-serif;
-  font-weight: bold;
-  font-size: 12px;
-
-  border: 2px solid;
-  border-color: #ffffff #808080 #808080 #ffffff;
-  cursor: pointer;
-  padding-bottom: 2px;
 }
 
 .closeBtn:active {
   border-color: #808080 #ffffff #ffffff #808080;
-  padding-top: 1px;
-  padding-left: 1px;
-  padding-bottom: 0px;
+  /* transform: translate(1px, 1px); */
+  padding: 1px 0 0 1px;
 }
 
 .closeBtn:disabled {
