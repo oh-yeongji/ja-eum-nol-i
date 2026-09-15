@@ -4,7 +4,7 @@ import path from "path";
 
 export default defineConfig({
   plugins: [react()],
-      resolve: {
+  resolve: {
     alias: {
       "@api": path.resolve(__dirname, "src/api"),
       "@": path.resolve(__dirname, "src"),
@@ -22,7 +22,16 @@ export default defineConfig({
         changeOrigin: true,
       },
     },
-
-
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes("node_modules")) {
+            return "vendor";
+          }
+        },
+      },
+    },
   },
 });
