@@ -1,6 +1,6 @@
 import { XMLParser } from "fast-xml-parser";
 import dotenv from "dotenv";
-import { WordModel } from "../models/Word";
+import { WordModel } from "../models/WordCache";
 
 dotenv.config();
 
@@ -17,6 +17,8 @@ const xmlParser = new XMLParser({
   parseTagValue: true,
   trimValues: true,
 });
+
+const pendingRequests = new Map<string, Promise<DictCheckResult>>();
 
 function parseNounDefinition(
   xmlData: any,
@@ -76,66 +78,71 @@ function parseNounDefinition(
 
 export async function checkWordDetail(word: string): Promise<DictCheckResult> {
   const cleanWord = word.trim();
-  const STDICT_API_KEY = process.env.STDICT_API_KEY;
-  const KORDIC_API_KEY = process.env.KORDIC_API_KEY;
-
   const startTime = performance.now();
-
-  try {
-    const cachedWord = await WordModel.findOne({ word: cleanWord });
-    if (
-      cachedWord &&
-      cachedWord.exist &&
-      cachedWord.definition &&
-      cachedWord.definition !== "뜻 정보 없음"
-    ) {
-      const endTime = performance.now();
-      return {
-        exist: cachedWord.exist,
-        definition: cachedWord.definition,
-        processTime: `${(endTime - startTime).toFixed(4)}ms (Cache HIT)`,
-      };
-    }
-
-    let searchResult: DictCheckResult = {
-      exist: false,
-      definition: "명사가 아닙니다.",
-    };
-
-    if (STDICT_API_KEY) {
-      const stdictUrl = `https://stdict.korean.go.kr/api/search.do?key=${STDICT_API_KEY}&req_type=xml&q=${encodeURIComponent(cleanWord)}`;
-      const stdictResponse = await fetch(stdictUrl);
-      const stdictXmlText = await stdictResponse.text();
-      const stdictParsedData = xmlParser.parse(stdictXmlText);
-
-      searchResult = parseNounDefinition(stdictParsedData, cleanWord);
-    }
-
-    if (!searchResult.exist && KORDIC_API_KEY) {
-      const opendictUrl = `https://opendict.korean.go.kr/api/search?key=${KORDIC_API_KEY}&req_type=xml&q=${encodeURIComponent(cleanWord)}`;
-      const opendictResponse = await fetch(opendictUrl);
-      const opendictXmlText = await opendictResponse.text();
-      const opendictParsedData = xmlParser.parse(opendictXmlText);
-
-      searchResult = parseNounDefinition(opendictParsedData, cleanWord);
-    }
-
-    await WordModel.findOneAndUpdate(
-      { word: cleanWord },
-      { exist: searchResult.exist, definition: searchResult.definition },
-      { upsert: true },
-    );
-
-    const endTime = performance.now();
-    searchResult.processTime = `${(endTime - startTime).toFixed(4)}ms (API Call)`;
-
-    return searchResult;
-  } catch (err: any) {
+  const cachedWord = await WordModel.findOne({ word: cleanWord });
+  if (cachedWord) {
     const endTime = performance.now();
     return {
-      exist: false,
-      definition: "데이터 처리 오류",
-      processTime: `${(endTime - startTime).toFixed(4)}ms (Error)`,
+      exist: cachedWord.exist,
+      definition: cachedWord.definition,
+      processTime: `${(endTime - startTime).toFixed(4)}ms (Cache HIT)`,
     };
   }
+
+  if (pendingRequests.has(cleanWord)) {
+    return pendingRequests.get(cleanWord)!;
+  }
+
+  const fetchPromise = (async () => {
+    const STDICT_API_KEY = process.env.STDICT_API_KEY;
+    const KORDIC_API_KEY = process.env.KORDIC_API_KEY;
+
+    try {
+      let searchResult: DictCheckResult = {
+        exist: false,
+        definition: "명사가 아닙니다.",
+      };
+
+      if (STDICT_API_KEY) {
+        const stdictUrl = `https://stdict.korean.go.kr/api/search.do?key=${STDICT_API_KEY}&req_type=xml&q=${encodeURIComponent(cleanWord)}`;
+        const stdictResponse = await fetch(stdictUrl);
+        const stdictXmlText = await stdictResponse.text();
+        const stdictParsedData = xmlParser.parse(stdictXmlText);
+
+        searchResult = parseNounDefinition(stdictParsedData, cleanWord);
+      }
+
+      if (!searchResult.exist && KORDIC_API_KEY) {
+        const opendictUrl = `https://opendict.korean.go.kr/api/search?key=${KORDIC_API_KEY}&req_type=xml&q=${encodeURIComponent(cleanWord)}`;
+        const opendictResponse = await fetch(opendictUrl);
+        const opendictXmlText = await opendictResponse.text();
+        const opendictParsedData = xmlParser.parse(opendictXmlText);
+
+        searchResult = parseNounDefinition(opendictParsedData, cleanWord);
+      }
+
+      await WordModel.findOneAndUpdate(
+        { word: cleanWord },
+        { exist: searchResult.exist, definition: searchResult.definition },
+        { upsert: true },
+      );
+
+      const endTime = performance.now();
+      searchResult.processTime = `${(endTime - startTime).toFixed(4)}ms (API Call)`;
+
+      return searchResult;
+    } catch (err: any) {
+      const endTime = performance.now();
+      return {
+        exist: false,
+        definition: "데이터 처리 오류",
+        processTime: `${(endTime - startTime).toFixed(4)}ms (Error)`,
+      };
+    } finally {
+      pendingRequests.delete(cleanWord);
+    }
+  })();
+
+  pendingRequests.set(cleanWord, fetchPromise);
+  return fetchPromise;
 }

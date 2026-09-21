@@ -1,7 +1,7 @@
 import { performance } from "perf_hooks";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
-import { WordModel } from "../models/Word";
+import { WordModel } from "../models/WordCache";
 
 dotenv.config();
 

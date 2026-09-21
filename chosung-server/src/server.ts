@@ -5,8 +5,6 @@ import { createServer } from "http";
 import cors from "cors";
 import { Server, Socket } from "socket.io";
 import { connectDB } from "./config/db";
-import { checkWordDetail } from "./lib/dict";
-import { WordModel } from "./models/Word";
 import { Chat } from "./models/Chat";
 import { randomUUID } from "crypto";
 import gameRouter from "./routes/game.routes";

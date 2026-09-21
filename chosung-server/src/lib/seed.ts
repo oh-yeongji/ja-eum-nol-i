@@ -4,7 +4,7 @@ import fs from "fs";
 import path from "path";
 import mongoose from "mongoose";
 import * as XLSX from "xlsx";
-import { WordModel } from "../models/Word";
+import { WordModel } from "../models/WordCache";
 import { extractTwoChosungs } from "../game/chosung";
 
 const MONGODB_URI = process.env.MONGODB_URI;
