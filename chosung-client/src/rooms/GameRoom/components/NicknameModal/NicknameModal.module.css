@@ -73,6 +73,10 @@
   padding-left: 2px;
 }
 
+.dupCheck:disabled {
+  pointer-events: none;
+}
+
 .dupCheck.checked {
   background: #555555;
   color: #eeeeee;
@@ -95,10 +99,14 @@
   color: #404040;
 }
 
+.loadingMessage {
+  font-family: "Seogung", sans-serif;
+  font-size: 16px;
+}
 .dupMessage {
   font-size: 14px;
   height: 18px;
-  margin-left: 30px;
+  margin-left: 10px;
 }
 .dup {
   color: #b22222;

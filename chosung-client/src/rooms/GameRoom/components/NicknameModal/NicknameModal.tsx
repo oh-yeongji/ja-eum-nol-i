@@ -12,6 +12,7 @@ const NicknameModal = ({ onClose, onConfirm }: NicknameModalProps) => {
   const [nickname, setNickname] = useState("");
   const [isChecked, setIsChecked] = useState(false);
   const [isAvailable, setIsAvailable] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [serverMessage, setServerMessage] = useState("");
 
   const inputRef = useRef<HTMLInputElement>(null);
@@ -22,10 +23,13 @@ const NicknameModal = ({ onClose, onConfirm }: NicknameModalProps) => {
 
   const handleCheckDup = () => {
     const trimmed = nickname.trim();
-    if (nickname.trim().length < 2 || nickname.trim().length > 8) {
+    if (trimmed.length < 2 || trimmed.length > 8) {
       alert("닉네임은 2~8자 를 입력해주세요.");
       return;
     }
+
+    setIsLoading(true);
+    setIsChecked(false);
 
     socket.emit("check-nickname", { nickname: trimmed });
   };
@@ -43,6 +47,8 @@ const NicknameModal = ({ onClose, onConfirm }: NicknameModalProps) => {
 
     if (e.key === "Enter") {
       e.preventDefault();
+
+      if (isLoading) return;
 
       if (!isChecked || !isAvailable) {
         handleCheckDup();
@@ -62,6 +68,7 @@ const NicknameModal = ({ onClose, onConfirm }: NicknameModalProps) => {
     socket.on(
       "nickname-check-result",
       (data: { available: boolean; message: string }) => {
+        setIsLoading(false);
         setIsChecked(true);
         setIsAvailable(data.available);
         setServerMessage(data.message);
@@ -86,29 +93,39 @@ const NicknameModal = ({ onClose, onConfirm }: NicknameModalProps) => {
               value={nickname}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
+              disabled={isLoading}
             />
             <button
               className={`${styles.dupCheck} ${isChecked && isAvailable ? styles.checked : ""}`}
               onClick={handleCheckDup}
+              disabled={isLoading}
             >
-              중복검사
+              {isLoading ? "중복검사 중..." : "중복검사"}
             </button>
           </div>
 
           <div className={styles.dupMessage}>
-            {isChecked && (
+            {isLoading && (
+              <span className={styles.loadingMessage}>
+                중복 검사 중입니다...
+              </span>
+            )}
+
+            {!isLoading && isChecked && (
               <span className={isAvailable ? styles.available : styles.dup}>
                 {serverMessage}
               </span>
             )}
           </div>
           <div className={styles.nicknameRule}>
-            사용 가능: 한글/영문(대소문자) 2~8자 , 특수문자( - , _ , *)
+            사용 가능: 한글/영문(대소문자) 2~8자,
+            <br />
+            특수문자( - _ *)
           </div>
           <div className={styles.btns}>
             <button
-              disabled={!isChecked || !isAvailable}
-              className={`${styles.confirmBtn} ${!isAvailable || !isChecked ? "disabled" : ""}`}
+              disabled={!isChecked || !isAvailable || isLoading}
+              className={`${styles.confirmBtn} ${!isAvailable || !isChecked || isLoading ? "disabled" : ""}`}
               onClick={handleConfirmClick}
             >
               설정
