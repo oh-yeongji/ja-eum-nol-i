@@ -13,6 +13,7 @@ import { getRandomChosungPair } from "./game/chosung";
 import { validateWord } from "./game/gameService";
 import { MAX_TIME_CHANGE_COUNT } from "./types";
 import type { Room, UsedWord, Player, PlayerSnapshot } from "./types";
+
 const app = express();
 
 app.use(
@@ -49,6 +50,8 @@ const io = new Server(httpServer, {
   },
   allowEIO3: true,
   transports: ["websocket", "polling"],
+  pingInterval: 10000,
+  pingTimeout: 5000,
 });
 
 const rooms = new Map<string, Room>();
@@ -184,12 +187,13 @@ io.on("connection", (socket: Socket) => {
     }
 
     const trimmedNickname = nickname.trim();
-    const nicknameRegex = /^[가-힣a-zA-Z0-9\-_*]{2,8}$/;
+    const nicknameRegex = /^[가-힣a-zA-Z0-9\s\-_*()/,.^\\~?]{2,12}$/;
 
     if (!nicknameRegex.test(trimmedNickname)) {
       return socket.emit("nickname-check-result", {
         available: false,
-        message: "한글/영문 2~8자, 특수문자(-, _, *)만 가능합니다.",
+        message:
+          "한글/영문 2~12자, 띄어쓰기, 특수문자( - _ * () ~ . \ , ^ / ? )만 가능합니다.",
       });
     }
 
@@ -199,12 +203,12 @@ io.on("connection", (socket: Socket) => {
       available: !taken,
       nickname: trimmedNickname,
       message: taken
-        ? "중복된 닉네임(별호) 입니다."
-        : "사용 가능한 닉네임(별호) 입니다.",
+        ? "중복된 별호(닉네임) 입니다."
+        : "사용 가능한 별호(닉네임) 입니다.",
     });
   });
 
-  const handleLeaveRoom = async (socket: Socket) => {
+const handleLeaveRoom = async (socket: Socket) => {
     const resultData = getRoomBySocket(socket.id);
     if (!resultData) return;
 
@@ -213,6 +217,59 @@ io.on("connection", (socket: Socket) => {
     const leaver = room.players.get(leaverId);
 
     if (!leaver) return;
+
+    if (room.status === "PLAY") {
+      room.status = "END";
+
+      if (room.gameDurationTimer) {
+        clearTimeout(room.gameDurationTimer);
+        room.gameDurationTimer = undefined;
+      }
+
+      const remainingPlayers = Array.from(room.players.values()).filter(
+        (p) => p.socketId !== leaverId
+      );
+      const winner = remainingPlayers[0];
+
+      const resultsEndAt = Date.now() + 15000;
+
+      const finalScore = [
+        ...(winner
+          ? [
+              {
+                nickname: winner.nickname,
+                score: winner.score,
+                socketId: winner.socketId,
+                isLeaver: false,
+              },
+            ]
+          : []),
+        {
+          nickname: leaver.nickname,
+          score: leaver.score,
+          socketId: leaver.socketId,
+          isLeaver: true,
+        },
+      ];
+
+      io.to(roomId).emit("game-end", {
+        words: Array.from(room.usedWords),
+        scores: finalScore,
+        resultsEndAt,
+      });
+
+      room.players.delete(leaverId);
+
+      if (room.players.size === 0) {
+        if (room.gameDurationTimer) {
+          clearTimeout(room.gameDurationTimer);
+          room.gameDurationTimer = undefined;
+        }
+        rooms.delete(roomId);
+        await Chat.deleteMany({ roomId });
+      }
+      return;
+    }
 
     room.players.delete(leaverId);
 
@@ -224,6 +281,7 @@ io.on("connection", (socket: Socket) => {
         type: "system",
       });
     }
+
     if (room.status === "COUNTDOWN") {
       if (room.readyNoticeTimer) {
         clearTimeout(room.readyNoticeTimer);
@@ -255,48 +313,6 @@ io.on("connection", (socket: Socket) => {
         players: playerSnapshot,
         status: room.status,
       });
-    } else if (room.status === "PLAY") {
-      const winner = Array.from(room.players.values())[0];
-      room.status = "END";
-
-      if (room.gameDurationTimer) {
-        clearTimeout(room.gameDurationTimer);
-        room.gameDurationTimer = undefined;
-      }
-
-      const resultsEndAt = Date.now() + 15000;
-
-      const finalScore = winner
-        ? [
-            {
-              nickname: winner.nickname,
-              score: winner.score,
-              socketId: winner.socketId,
-              isLeaver: false,
-            },
-            {
-              nickname: leaver.nickname,
-              score: leaver.score,
-              socketId: leaver.socketId,
-              isLeaver: true,
-            },
-          ]
-        : [
-            {
-              nickname: leaver.nickname,
-              score: leaver.score,
-              socketId: leaver.socketId,
-              isLeaver: true,
-            },
-          ];
-
-      io.to(roomId).emit("game-end", {
-        words: Array.from(room.usedWords),
-        scores: finalScore,
-        resultsEndAt,
-      });
-
-      return;
     }
 
     if (room.players.size === 0) {
@@ -310,7 +326,7 @@ io.on("connection", (socket: Socket) => {
   };
 
   socket.on("leave-room", () => handleLeaveRoom(socket));
-  socket.on("disconnect", (reason) => {
+  socket.on("disconnect", () => {
     handleLeaveRoom(socket);
   });
 
@@ -319,8 +335,7 @@ io.on("connection", (socket: Socket) => {
     if (already) {
       const { roomId: oldId, room: oldRoom } = already;
 
-      if (oldRoom.status === "PLAY") {
-      } else {
+      if (oldRoom.status !== "PLAY") {
         oldRoom.players.delete(socket.id);
         socket.leave(oldId);
 
@@ -542,7 +557,7 @@ io.on("connection", (socket: Socket) => {
         socketId: "system",
         nickname: "",
         message: "방장이 강제시작을 취소했습니다.",
-        type: "system ",
+        type: "system",
       });
     }
   });

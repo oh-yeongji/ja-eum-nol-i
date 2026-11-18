@@ -23,8 +23,8 @@ const NicknameModal = ({ onClose, onConfirm }: NicknameModalProps) => {
 
   const handleCheckDup = () => {
     const trimmed = nickname.trim();
-    if (trimmed.length < 2 || trimmed.length > 8) {
-      alert("닉네임은 2~8자 를 입력해주세요.");
+    if (trimmed.length < 2 || trimmed.length > 12) {
+      alert("닉네임은 2~12자 를 입력해주세요.");
       return;
     }
 
@@ -118,9 +118,9 @@ const NicknameModal = ({ onClose, onConfirm }: NicknameModalProps) => {
             )}
           </div>
           <div className={styles.nicknameRule}>
-            사용 가능: 한글/영문(대소문자) 2~8자,
+            사용 가능: 한글/영문(대소문자) 2~12자,
             <br />
-            특수문자( - _ *)
+            띄어쓰기 , 특수문자( - _ * () ~ . \ , ^ / ?)
           </div>
           <div className={styles.btns}>
             <button
