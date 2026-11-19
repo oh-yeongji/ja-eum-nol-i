@@ -187,13 +187,13 @@ io.on("connection", (socket: Socket) => {
     }
 
     const trimmedNickname = nickname.trim();
-    const nicknameRegex = /^[가-힣a-zA-Z0-9\s\-_*()/,.^\\~?]{2,12}$/;
+    const nicknameRegex = /^[가-힣a-zA-Z0-9\s\-_*()₩/,.^\\~?]{2,12}$/;
 
     if (!nicknameRegex.test(trimmedNickname)) {
       return socket.emit("nickname-check-result", {
         available: false,
         message:
-          "한글/영문 2~12자, 띄어쓰기, 특수문자( - _ * () ~ . \ , ^ / ? )만 가능합니다.",
+          "한글/영문 2~12자, 띄어쓰기, 특수문자( - _ * () ₩ ~ . \ , ^ / ? )만 가능합니다.",
       });
     }
 
@@ -208,7 +208,7 @@ io.on("connection", (socket: Socket) => {
     });
   });
 
-const handleLeaveRoom = async (socket: Socket) => {
+  const handleLeaveRoom = async (socket: Socket) => {
     const resultData = getRoomBySocket(socket.id);
     if (!resultData) return;
 
@@ -227,7 +227,7 @@ const handleLeaveRoom = async (socket: Socket) => {
       }
 
       const remainingPlayers = Array.from(room.players.values()).filter(
-        (p) => p.socketId !== leaverId
+        (p) => p.socketId !== leaverId,
       );
       const winner = remainingPlayers[0];
 
